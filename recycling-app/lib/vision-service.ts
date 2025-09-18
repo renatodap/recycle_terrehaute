@@ -13,14 +13,10 @@ export function getVisionClient(): ImageAnnotatorClient {
         keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
       });
     } else if (process.env.GOOGLE_VISION_API_KEY) {
-      // Use API key (limited features)
-      visionClient = new ImageAnnotatorClient({
-        apiEndpoint: 'vision.googleapis.com',
-        credentials: {
-          client_email: 'api-key@project.iam.gserviceaccount.com',
-          private_key: process.env.GOOGLE_VISION_API_KEY,
-        },
-      } as any);
+      // For API key usage, we'll make direct HTTP requests instead
+      // The Google Cloud client library doesn't directly support API keys
+      console.log('Google Vision API Key detected, using HTTP mode');
+      return null as any; // We'll handle this in analyzeImageWithVision
     } else {
       // Fallback to mock mode
       console.warn('No Google Vision credentials found. Using mock mode.');
@@ -83,6 +79,102 @@ async function retryWithBackoff<T>(
   throw lastError || new Error('Max retries exceeded');
 }
 
+// Use Vision API with API Key via HTTP
+async function analyzeWithApiKey(imageBase64: string): Promise<VisionAnalysisResult> {
+  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+  if (!apiKey) {
+    throw new Error('Google Vision API key not found');
+  }
+
+  const url = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+
+  const requestBody = {
+    requests: [
+      {
+        image: {
+          content: imageBase64
+        },
+        features: [
+          { type: 'LABEL_DETECTION', maxResults: 20 },
+          { type: 'OBJECT_LOCALIZATION', maxResults: 10 },
+          { type: 'TEXT_DETECTION', maxResults: 50 },
+          { type: 'WEB_DETECTION', maxResults: 10 }
+        ]
+      }
+    ]
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Vision API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const result = data.responses[0];
+
+    // Process the response into our format
+    const processedResult: VisionAnalysisResult = {
+      labels: [],
+      objects: [],
+      texts: [],
+      webEntities: [],
+    };
+
+    // Extract labels
+    if (result.labelAnnotations) {
+      processedResult.labels = result.labelAnnotations
+        .filter((label: any) => label.score > 0.5)
+        .map((label: any) => ({
+          description: label.description || '',
+          score: label.score || 0,
+        }));
+    }
+
+    // Extract objects
+    if (result.localizedObjectAnnotations) {
+      processedResult.objects = result.localizedObjectAnnotations
+        .filter((obj: any) => obj.score > 0.5)
+        .map((obj: any) => ({
+          name: obj.name || '',
+          score: obj.score || 0,
+        }));
+    }
+
+    // Extract text
+    if (result.textAnnotations && result.textAnnotations.length > 0) {
+      const fullText = result.textAnnotations[0].description || '';
+      processedResult.texts = fullText
+        .split(/\s+/)
+        .filter((text: string) => text.length > 2)
+        .slice(0, 50);
+    }
+
+    // Extract web entities
+    if (result.webDetection?.webEntities) {
+      processedResult.webEntities = result.webDetection.webEntities
+        .filter((entity: any) => entity.score && entity.score > 0.5)
+        .map((entity: any) => ({
+          description: entity.description || '',
+          score: entity.score || 0,
+        }));
+    }
+
+    return processedResult;
+  } catch (error) {
+    console.error('Vision API HTTP request failed:', error);
+    throw error;
+  }
+}
+
 // Main Vision API analysis function
 export async function analyzeImageWithVision(
   imageBase64: string,
@@ -91,10 +183,19 @@ export async function analyzeImageWithVision(
   const startTime = Date.now();
 
   try {
+    // Check if we should use API key method
+    if (process.env.GOOGLE_VISION_API_KEY && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      console.log('Using Vision API with API key');
+      const result = await analyzeWithApiKey(imageBase64);
+      console.log(`Vision API analysis completed in ${Date.now() - startTime}ms`);
+      return result;
+    }
+
     const client = getVisionClient();
 
     // Use mock data if no client
     if (!client) {
+      console.log('Using mock data - no Vision API configured');
       return getMockVisionResult();
     }
 
