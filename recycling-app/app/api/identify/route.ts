@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       // Try Google Vision with API key as second option
       else if (process.env.GOOGLE_VISION_API_KEY) {
         console.log('Attempting Google Vision API with API key...');
-        visionResult = await analyzeImageWithVision(image, process.env.GOOGLE_VISION_API_KEY);
+        visionResult = await analyzeImageWithVision(image); // Function will use API key from env
         visionService = 'google-vision-apikey';
       } else {
         throw new Error('Google Vision API not configured');
