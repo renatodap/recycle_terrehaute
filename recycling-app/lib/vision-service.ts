@@ -114,8 +114,23 @@ async function analyzeWithApiKey(imageBase64: string): Promise<VisionAnalysisRes
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Vision API error: ${error}`);
+      const errorText = await response.text();
+      let errorMessage = `Vision API error: ${errorText}`;
+
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('not been used in project')) {
+          errorMessage = 'Google Vision API is not enabled. Please enable it in Google Cloud Console for your project.';
+        } else if (errorData.error?.message?.includes('API key not valid')) {
+          errorMessage = 'Invalid Google Vision API key. Please check your API key.';
+        } else if (errorData.error?.code === 403) {
+          errorMessage = 'Permission denied. Please check API key permissions and that Vision API is enabled.';
+        }
+      } catch (e) {
+        // Keep original error message if parsing fails
+      }
+
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

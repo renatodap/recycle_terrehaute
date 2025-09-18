@@ -204,10 +204,24 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in identify endpoint:', error);
 
+    const errorMessage = (error as Error).message;
+    let userFriendlyMessage = 'Unable to analyze image';
+
+    // Provide user-friendly error messages
+    if (errorMessage.includes('Vision API is not enabled')) {
+      userFriendlyMessage = 'The recycling identification service is being set up. Please try again in a few minutes.';
+    } else if (errorMessage.includes('Invalid Google Vision API key')) {
+      userFriendlyMessage = 'Configuration error. Please contact support.';
+    } else if (errorMessage.includes('Permission denied')) {
+      userFriendlyMessage = 'Service temporarily unavailable. Please try again later.';
+    } else if (errorMessage.includes('quota')) {
+      userFriendlyMessage = 'Daily limit reached. Please try again tomorrow.';
+    }
+
     return NextResponse.json(
       {
-        error: 'Failed to analyze image',
-        message: (error as Error).message,
+        error: userFriendlyMessage,
+        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
         processing_time_ms: Date.now() - startTime,
       },
       { status: 500 }
