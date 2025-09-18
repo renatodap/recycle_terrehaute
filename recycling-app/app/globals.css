@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f0fdf4;
-  --foreground: #14532d;
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+
+  /* Core recycling colors */
+  --color-recyclable: #22c55e;
+  --color-trash: #ef4444;
+  --color-special: #3b82f6;
+  --color-hazardous: #eab308;
 }
 
 @theme inline {
@@ -14,8 +20,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #14532d;
-    --foreground: #dcfce7;
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+
+    --color-recyclable: #4ade80;
+    --color-trash: #f87171;
+    --color-special: #60a5fa;
+    --color-hazardous: #facc15;
   }
 }
 
