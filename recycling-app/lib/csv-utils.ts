@@ -8,6 +8,18 @@ export interface RecyclableItem {
   special_instructions: string;
 }
 
+export interface RecyclableItemEnhanced {
+  item: string;
+  category: string;
+  recyclable: string;
+  bin_type: string;
+  special_instructions: string;
+  contamination_notes: string;
+  vision_labels: string;
+  material_codes: string;
+  similar_items: string;
+}
+
 export interface DropOffLocation {
   name: string;
   address: string;
@@ -44,6 +56,12 @@ export async function readRecyclableItems(): Promise<RecyclableItem[]> {
   const filePath = path.join(process.cwd(), 'data', 'recyclable-items.csv');
   const content = await fs.promises.readFile(filePath, 'utf-8');
   return parseCSV<RecyclableItem>(content);
+}
+
+export async function readRecyclableItemsEnhanced(): Promise<RecyclableItemEnhanced[]> {
+  const filePath = path.join(process.cwd(), 'data', 'recyclable-items-enhanced.csv');
+  const content = await fs.promises.readFile(filePath, 'utf-8');
+  return parseCSV<RecyclableItemEnhanced>(content);
 }
 
 export async function readDropOffLocations(): Promise<DropOffLocation[]> {

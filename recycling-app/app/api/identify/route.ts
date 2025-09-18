@@ -1,77 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readRecyclableItems } from '@/lib/csv-utils';
+import { readRecyclableItemsEnhanced } from '@/lib/csv-utils';
+import {
+  analyzeImageWithVision,
+  trackApiUsage,
+  VisionAnalysisResult
+} from '@/lib/vision-service';
+import {
+  findMatches,
+  getUnidentifiedObjects,
+  RecyclableItemEnhanced
+} from '@/lib/matching-algorithm';
+import {
+  generateCacheKey,
+  getCachedResult,
+  setCachedResult,
+  checkRateLimit,
+  checkDailyLimit,
+} from '@/lib/cache-service';
 
-// TODO: Integrate with Google Vision API
-// 1. Install @google-cloud/vision package
-// 2. Set up authentication with GOOGLE_VISION_API_KEY
-// 3. Process image with Vision API
-// 4. Match detected labels against recyclable items database
-
-// Mock function for Google Vision API integration
-async function analyzeImageWithVisionAPI(imageBase64: string): Promise<string[]> {
-  // This is where Google Vision API integration will go
-  // For now, return mock labels for testing
-
-  // const vision = new ImageAnnotatorClient({
-  //   apiKey: process.env.GOOGLE_VISION_API_KEY,
-  // });
-  //
-  // const [result] = await vision.labelDetection({
-  //   image: { content: imageBase64 },
-  // });
-  //
-  // const labels = result.labelAnnotations?.map(label => label.description) || [];
-  // return labels;
-
-  // Mock response for demonstration
-  const mockLabels = ['Plastic Bottle', 'Bottle', 'Plastic', 'Container'];
-  return mockLabels;
+// Get client ID from request
+function getClientId(request: NextRequest): string {
+  // In production, use authenticated user ID
+  // For now, use IP address or a default
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded ? forwarded.split(',')[0] : 'default-client';
+  return ip;
 }
 
-// Match detected labels with recyclable items
-function findBestMatch(labels: string[], items: any[]): any {
-  let bestMatch = null;
-  let highestScore = 0;
-
-  for (const item of items) {
-    let score = 0;
-    const itemName = item.item.toLowerCase();
-    const itemCategory = item.category.toLowerCase();
-
-    for (const label of labels) {
-      const lowerLabel = label.toLowerCase();
-
-      // Exact match
-      if (itemName === lowerLabel) {
-        score += 10;
-      }
-      // Partial match in name
-      else if (itemName.includes(lowerLabel) || lowerLabel.includes(itemName)) {
-        score += 5;
-      }
-      // Category match
-      else if (itemCategory === lowerLabel || lowerLabel.includes(itemCategory)) {
-        score += 3;
-      }
-    }
-
-    if (score > highestScore) {
-      highestScore = score;
-      bestMatch = { ...item, confidence: Math.min(score / 10, 1) };
-    }
-  }
-
-  return bestMatch || {
-    item: 'Unknown Item',
-    category: 'Unknown',
-    recyclable: 'Unknown',
-    special_instructions: 'Could not identify this item. Try searching manually.',
-    confidence: 0
-  };
-}
-
+// Main identify endpoint
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const clientId = getClientId(request);
+
   try {
+    // Check rate limits
+    const rateLimit = checkRateLimit(clientId, {
+      maxRequests: 10,
+      windowMs: 60000, // 1 minute
+    });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: `Too many requests. Please try again after ${rateLimit.resetTime.toISOString()}`,
+          remaining: rateLimit.remaining,
+          resetTime: rateLimit.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': rateLimit.resetTime.toISOString(),
+          }
+        }
+      );
+    }
+
+    // Check daily limits
+    const dailyLimit = checkDailyLimit(clientId,
+      parseInt(process.env.DAILY_API_LIMIT || '1000')
+    );
+
+    if (!dailyLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Daily limit exceeded',
+          message: `Daily API limit reached. Resets at ${dailyLimit.resetTime.toISOString()}`,
+          used: dailyLimit.used,
+          limit: 1000,
+          resetTime: dailyLimit.resetTime,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Parse request
     const formData = await request.formData();
     const image = formData.get('image') as File;
 
@@ -82,32 +87,147 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate image size (max 4MB)
+    if (image.size > 4 * 1024 * 1024) {
+      return NextResponse.json(
+        {
+          error: 'Image too large',
+          message: 'Image size must be less than 4MB'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate image type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(image.type)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid image type',
+          message: 'Image must be JPEG, PNG, or WebP format'
+        },
+        { status: 400 }
+      );
+    }
+
     // Convert image to base64
     const bytes = await image.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64 = buffer.toString('base64');
 
-    // Analyze image with Vision API (mock for now)
-    const detectedLabels = await analyzeImageWithVisionAPI(base64);
+    // Check cache
+    const cacheKey = generateCacheKey(base64);
+    const cachedResult = getCachedResult(cacheKey);
 
-    // Load recyclable items from CSV
-    const recyclableItems = await readRecyclableItems();
+    if (cachedResult) {
+      console.log('Returning cached result');
+      return NextResponse.json({
+        ...cachedResult,
+        cached: true,
+        processing_time_ms: Date.now() - startTime,
+      });
+    }
 
-    // Find best matching item
-    const match = findBestMatch(detectedLabels, recyclableItems);
+    // Analyze image with Vision API
+    console.log('Analyzing image with Vision API...');
+    const visionResult = await analyzeImageWithVision(base64);
 
-    return NextResponse.json({
+    // Check if Vision API returned an error
+    if (visionResult.error) {
+      console.warn('Vision API error, using fallback:', visionResult.error);
+    }
+
+    // Load recyclable items from enhanced CSV
+    const recyclableItems = await readRecyclableItemsEnhanced();
+
+    // Find matches using intelligent algorithm
+    console.log('Running matching algorithm...');
+    const matches = findMatches(visionResult, recyclableItems);
+
+    // Get unidentified objects
+    const unidentifiedObjects = getUnidentifiedObjects(visionResult, matches);
+
+    // Track API usage
+    const apiUsage = trackApiUsage();
+
+    // Prepare response
+    const response = {
       success: true,
-      detectedLabels,
-      match,
-      message: 'Image analyzed successfully'
-    });
+      identified_items: matches.map(match => ({
+        name: match.name,
+        confidence: Math.round(match.confidence),
+        is_recyclable: match.is_recyclable,
+        bin_type: match.bin_type,
+        category: match.category,
+        special_instructions: match.special_instructions,
+        contamination_notes: match.contamination_notes,
+        alternative_disposal: match.alternative_disposal,
+        vision_labels: match.vision_labels.slice(0, 10), // Limit to 10 labels
+        matching_method: match.matching_method,
+      })),
+      unidentified_objects: unidentifiedObjects,
+      api_credits_remaining: apiUsage.remaining,
+      processing_time_ms: Date.now() - startTime,
+      vision_api_used: !visionResult.error,
+      rate_limit: {
+        remaining: rateLimit.remaining - 1,
+        reset: rateLimit.resetTime,
+      },
+      daily_limit: {
+        used: dailyLimit.used,
+        remaining: dailyLimit.remaining - 1,
+        reset: dailyLimit.resetTime,
+      },
+    };
+
+    // Cache the result
+    setCachedResult(cacheKey, response);
+
+    // Add helpful message if no matches found
+    if (matches.length === 0) {
+      response.identified_items = [{
+        name: 'Unknown Item',
+        confidence: 0,
+        is_recyclable: false,
+        bin_type: 'trash',
+        category: 'Unknown',
+        special_instructions: 'Could not identify this item. Please try manual search or take a clearer photo.',
+        contamination_notes: '',
+        alternative_disposal: 'When in doubt, throw it out to avoid contaminating recycling.',
+        vision_labels: visionResult.labels.map(l => l.description).slice(0, 5),
+        matching_method: 'none' as any,
+      }];
+    }
+
+    return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Error analyzing image:', error);
+    console.error('Error in identify endpoint:', error);
+
     return NextResponse.json(
-      { error: 'Failed to analyze image' },
+      {
+        error: 'Failed to analyze image',
+        message: (error as Error).message,
+        processing_time_ms: Date.now() - startTime,
+      },
       { status: 500 }
     );
   }
+}
+
+// Health check endpoint
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    status: 'healthy',
+    endpoints: {
+      identify: 'POST /api/identify',
+      test: 'POST /api/identify/test',
+    },
+    vision_configured: !!(
+      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+      process.env.GOOGLE_VISION_API_KEY
+    ),
+    cache_enabled: true,
+    rate_limiting: true,
+  });
 }

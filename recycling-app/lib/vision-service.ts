@@ -1,26 +1,26 @@
-import vision from '@google-cloud/vision';
+import { ImageAnnotatorClient } from '@google-cloud/vision';
 
 // Vision API client configuration
-let visionClient: vision.ImageAnnotatorClient | null = null;
+let visionClient: ImageAnnotatorClient | null = null;
 
 // Initialize Vision API client
-export function getVisionClient(): vision.ImageAnnotatorClient {
+export function getVisionClient(): ImageAnnotatorClient {
   if (!visionClient) {
     // Check for credentials
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
       // Use service account JSON file
-      visionClient = new vision.ImageAnnotatorClient({
+      visionClient = new ImageAnnotatorClient({
         keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
       });
     } else if (process.env.GOOGLE_VISION_API_KEY) {
       // Use API key (limited features)
-      visionClient = new vision.ImageAnnotatorClient({
+      visionClient = new ImageAnnotatorClient({
         apiEndpoint: 'vision.googleapis.com',
         credentials: {
           client_email: 'api-key@project.iam.gserviceaccount.com',
           private_key: process.env.GOOGLE_VISION_API_KEY,
         },
-      });
+      } as any);
     } else {
       // Fallback to mock mode
       console.warn('No Google Vision credentials found. Using mock mode.');
@@ -150,7 +150,10 @@ export async function analyzeImageWithVision(
           name: obj.name || '',
           score: obj.score || 0,
           boundingBox: obj.boundingPoly ? {
-            normalizedVertices: obj.boundingPoly.normalizedVertices || [],
+            normalizedVertices: (obj.boundingPoly.normalizedVertices || []).map(v => ({
+              x: v.x || 0,
+              y: v.y || 0,
+            })),
           } : undefined,
         }));
     }
