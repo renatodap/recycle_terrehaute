@@ -25,8 +25,14 @@ export async function interpretWithOpenAI(
 
 Image contains: ${topLabels}
 
+IMPORTANT: Be very specific about the type of plastic:
+- "Plastic Bottle" = hard plastic beverage/liquid containers with necks
+- "Plastic Wrapper/Packaging" = flexible plastic film, candy wrappers, chip bags
+- "Plastic Bag" = grocery bags, produce bags
+- "Plastic Container" = yogurt cups, takeout containers
+
 Respond with a JSON object containing:
-- item_name: specific name of the item
+- item_name: specific name of the item (be precise!)
 - is_recyclable: true/false
 - bin_color: "Blue" for recycling, "Black" for trash, "Special" for hazardous
 - disposal_method: brief instruction
@@ -38,7 +44,7 @@ Respond with a JSON object containing:
 - confidence: 0.0-1.0 how confident you are
 
 Terre Haute accepts: plastic bottles #1-7, aluminum cans, glass bottles, paper, cardboard.
-Does NOT accept: plastic bags, styrofoam, electronics (need special disposal), batteries (hazardous waste).
+Does NOT accept: plastic wrappers, plastic bags, chip bags, candy wrappers, styrofoam, electronics (need special disposal), batteries (hazardous waste).
 
 Special disposal locations in Terre Haute:
 - Hazardous waste (batteries, paint, chemicals): Vigo County Household Hazardous Waste Center, 3025 S 4 1/2 St, Terre Haute, IN 47802, (812) 462-3370
@@ -160,6 +166,8 @@ export function interpretWithRules(labels: Array<{ name: string; value: number }
 
   // Non-recyclable patterns
   const trashPatterns = [
+    { pattern: /wrapper|packaging|packet|pouch|film/, name: 'Plastic Wrapper/Packaging', bin: 'Black', prep: 'Not recyclable in curbside programs' },
+    { pattern: /chip bag|snack bag|candy/, name: 'Snack Wrapper', bin: 'Black', prep: 'Multi-layer packaging cannot be recycled' },
     { pattern: /styrofoam|polystyrene/, name: 'Styrofoam', bin: 'Black', prep: '' },
     { pattern: /plastic bag/, name: 'Plastic Bag', bin: 'Black', prep: 'Return to store drop-off' },
     { pattern: /food waste|organic/, name: 'Food Waste', bin: 'Black', prep: 'Consider composting' },

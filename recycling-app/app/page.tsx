@@ -244,93 +244,70 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Disposal Instructions */}
+                  {/* Simplified Disposal Instructions */}
                   {result.item && !result.error && (
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 space-y-6">
-                      {/* Disposal Method */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 flex items-center">
-                          <span className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-3">
-                            📦
-                          </span>
-                          How to Dispose
-                        </h3>
-                        <p className="text-gray-700 dark:text-gray-300 text-lg pl-11">
-                          {result.item.disposal_method}
-                        </p>
-                      </div>
-
-                      {/* Bin Color */}
-                      {result.item.bin_color && (
-                        <div>
-                          <h3 className="text-lg font-semibold mb-3 flex items-center">
-                            <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
-                              🗑️
-                            </span>
-                            Which Bin?
-                          </h3>
-                          <div className="pl-11">
-                            <div className="inline-flex items-center space-x-3">
-                              <div className={`w-10 h-10 rounded-lg ${
-                                result.item.bin_color === 'Blue' ? 'bg-blue-500' :
-                                result.item.bin_color === 'Green' ? 'bg-green-500' :
-                                result.item.bin_color === 'Black' ? 'bg-gray-800' :
-                                result.item.bin_color === 'Special' ? 'bg-amber-500' :
-                                'bg-gray-500'
-                              }`}></div>
-                              <span className="text-lg font-medium">{result.item.bin_color} Bin</span>
-                            </div>
+                    <div className="space-y-4">
+                      {/* Main Disposal Card */}
+                      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6">
+                        {/* Bin Type Badge */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`inline-flex items-center px-4 py-2 rounded-2xl font-semibold ${
+                            result.item.bin_color === 'Blue' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                            result.item.bin_color === 'Black' ? 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300' :
+                            result.item.bin_color === 'Special' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' :
+                            'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300'
+                          }`}>
+                            {result.item.bin_color === 'Blue' ? '♻️ Recycling Bin' :
+                             result.item.bin_color === 'Black' ? '🗑️ Regular Trash' :
+                             result.item.bin_color === 'Special' ? '⚠️ Special Disposal' :
+                             '📦 ' + result.item.bin_color}
                           </div>
                         </div>
-                      )}
 
-                      {/* Preparation */}
-                      {result.item.preparation && (
-                        <div>
-                          <h3 className="text-lg font-semibold mb-3 flex items-center">
-                            <span className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mr-3">
-                              ✨
-                            </span>
-                            Preparation
-                          </h3>
-                          <p className="text-gray-700 dark:text-gray-300 text-lg pl-11">
-                            {result.item.preparation}
+                        {/* Simple Instructions */}
+                        <div className="space-y-3">
+                          <p className="text-lg font-medium text-gray-800 dark:text-gray-200">
+                            {result.item.disposal_method}
                           </p>
+
+                          {result.item.preparation && (
+                            <p className="text-gray-600 dark:text-gray-400">
+                              💡 {result.item.preparation}
+                            </p>
+                          )}
                         </div>
-                      )}
+                      </div>
 
-                      {/* Special Disposal Location */}
-                      {(result.item.disposal_location || result.item.disposal_address) && (
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                          <h3 className="text-lg font-semibold mb-4 flex items-center text-blue-600 dark:text-blue-400">
-                            <MapPin className="w-5 h-5 mr-2" />
-                            Special Disposal Required
-                          </h3>
+                      {/* Special Disposal Card - Only for hazardous/special items */}
+                      {result.item.bin_color === 'Special' && (result.item.disposal_location || result.item.disposal_address) && (
+                        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-3xl p-6 border-2 border-amber-200 dark:border-amber-800">
+                          <div className="flex items-center mb-3">
+                            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mr-2" />
+                            <span className="font-semibold text-amber-800 dark:text-amber-200">Special Disposal Location</span>
+                          </div>
 
-                          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 space-y-4">
+                          <div className="space-y-3">
                             {result.item.disposal_location && (
-                              <div>
-                                <p className="font-semibold text-lg text-blue-900 dark:text-blue-200">
-                                  {result.item.disposal_location}
-                                </p>
-                              </div>
+                              <p className="font-medium text-amber-900 dark:text-amber-100">
+                                {result.item.disposal_location}
+                              </p>
                             )}
 
                             {result.item.disposal_address && (
-                              <div className="flex items-start space-x-2">
-                                <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                                <p className="text-blue-800 dark:text-blue-300">
+                              <div className="flex items-start gap-2">
+                                <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" />
+                                <p className="text-amber-800 dark:text-amber-200 text-sm">
                                   {result.item.disposal_address}
                                 </p>
                               </div>
                             )}
 
                             {result.item.disposal_phone && (
-                              <div className="flex items-center space-x-2">
-                                <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                              <div className="flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                                 <a
                                   href={`tel:${result.item.disposal_phone}`}
-                                  className="text-blue-800 dark:text-blue-300 hover:underline"
+                                  className="text-amber-800 dark:text-amber-200 text-sm hover:underline"
                                 >
                                   {result.item.disposal_phone}
                                 </a>
@@ -343,9 +320,9 @@ export default function Home() {
                                   const encodedAddress = encodeURIComponent(result.item.disposal_address);
                                   window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`, '_blank');
                                 }}
-                                className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-2"
+                                className="w-full mt-3 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-medium rounded-xl shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
                               >
-                                <MapPin className="w-5 h-5" />
+                                <MapPin className="w-4 h-4" />
                                 <span>Get Directions</span>
                               </button>
                             )}
