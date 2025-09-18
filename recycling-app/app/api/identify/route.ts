@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Normalize labels to consistent format { name, value }
+    const normalizedLabels = visionResult.labels.map(label => ({
+      name: 'name' in label ? label.name : (label as any).description || '',
+      value: 'value' in label ? label.value : (label as any).score || 0
+    }));
+
     // Step 2: Use AI to interpret the results for recycling
     let interpretation;
     let aiService = 'rules'; // Track which service we used
@@ -75,7 +81,7 @@ export async function POST(request: NextRequest) {
       // Try OpenAI first if available
       if (process.env.OPENAI_API_KEY) {
         interpretation = await interpretWithOpenAI(
-          visionResult.labels,
+          normalizedLabels,
           process.env.OPENAI_API_KEY
         );
         aiService = 'openai';
@@ -83,20 +89,20 @@ export async function POST(request: NextRequest) {
       // Try Clarifai LLM if available
       else if (process.env.CLARIFAI_PAT) {
         interpretation = await interpretWithClarifai(
-          visionResult.labels,
+          normalizedLabels,
           process.env.CLARIFAI_PAT
         );
         aiService = 'clarifai-llm';
       }
       // Fallback to rule-based interpretation
       else {
-        interpretation = interpretWithRules(visionResult.labels);
+        interpretation = interpretWithRules(normalizedLabels);
         aiService = 'rules';
       }
     } catch (aiError) {
       console.error('AI interpretation failed, using rules:', aiError);
       // Fallback to rule-based if AI fails
-      interpretation = interpretWithRules(visionResult.labels);
+      interpretation = interpretWithRules(normalizedLabels);
       aiService = 'rules-fallback';
     }
 
@@ -115,11 +121,11 @@ export async function POST(request: NextRequest) {
         disposal_phone: interpretation.disposal_phone,
         category: interpretation.is_recyclable ? 'recyclable' :
                   interpretation.bin_color === 'Special' ? 'hazardous' : 'trash',
-        material: detectMaterial(visionResult.labels)
+        material: detectMaterial(normalizedLabels)
       },
       recyclable: interpretation.is_recyclable,
       confidence: interpretation.confidence,
-      vision_labels: visionResult.labels.slice(0, 5),
+      vision_labels: normalizedLabels.slice(0, 5),
       processing_time_ms: Date.now() - startTime,
       services: {
         vision: visionService,
