@@ -71,6 +71,9 @@ export async function POST(request: NextRequest) {
         disposal_method: interpretation.disposal_method,
         preparation: interpretation.preparation,
         special_instructions: interpretation.special_instructions,
+        disposal_location: interpretation.disposal_location,
+        disposal_address: interpretation.disposal_address,
+        disposal_phone: interpretation.disposal_phone,
         category: interpretation.is_recyclable ? 'recyclable' :
                   interpretation.bin_color === 'Special' ? 'hazardous' : 'trash',
         material: detectMaterial(clarifaiResult.labels)

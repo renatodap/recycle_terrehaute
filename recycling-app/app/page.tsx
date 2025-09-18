@@ -252,12 +252,42 @@ export default function Home() {
                       </div>
                     )}
 
-                    {result.item.drop_off_required && (
-                      <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                        <p className="text-sm text-blue-800 dark:text-blue-300">
-                          <AlertCircle className="inline w-4 h-4 mr-1" />
-                          Special drop-off required at: {result.item.drop_off_location}
-                        </p>
+                    {/* Show disposal location if special disposal needed */}
+                    {(result.item.disposal_location || result.item.disposal_address) && (
+                      <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 space-y-2">
+                        <div className="flex items-start space-x-2">
+                          <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            {result.item.disposal_location && (
+                              <p className="font-semibold text-blue-900 dark:text-blue-300">
+                                {result.item.disposal_location}
+                              </p>
+                            )}
+                            {result.item.disposal_address && (
+                              <p className="text-sm text-blue-800 dark:text-blue-300 mt-1">
+                                {result.item.disposal_address}
+                              </p>
+                            )}
+                            {result.item.disposal_phone && (
+                              <p className="text-sm text-blue-800 dark:text-blue-300">
+                                📞 {result.item.disposal_phone}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Get Directions Button */}
+                        {result.item.disposal_address && (
+                          <button
+                            onClick={() => {
+                              const encodedAddress = encodeURIComponent(result.item.disposal_address);
+                              window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`, '_blank');
+                            }}
+                            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                          >
+                            Get Directions
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

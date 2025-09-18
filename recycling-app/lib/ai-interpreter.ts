@@ -8,6 +8,9 @@ interface RecyclingInterpretation {
   disposal_method: string;
   preparation: string;
   special_instructions?: string;
+  disposal_location?: string;
+  disposal_address?: string;
+  disposal_phone?: string;
   confidence: number;
 }
 
@@ -29,13 +32,22 @@ Respond with a JSON object containing:
 - disposal_method: brief instruction
 - preparation: how to prepare item (empty string if none)
 - special_instructions: only if needed (optional)
+- disposal_location: name of disposal facility if special disposal needed
+- disposal_address: full address if special disposal needed
+- disposal_phone: phone number if special disposal needed
 - confidence: 0.0-1.0 how confident you are
 
 Terre Haute accepts: plastic bottles #1-7, aluminum cans, glass bottles, paper, cardboard.
 Does NOT accept: plastic bags, styrofoam, electronics (need special disposal), batteries (hazardous waste).
 
+Special disposal locations in Terre Haute:
+- Hazardous waste (batteries, paint, chemicals): Vigo County Household Hazardous Waste Center, 3025 S 4 1/2 St, Terre Haute, IN 47802, (812) 462-3370
+- Electronics: Best Buy, 3401 US-41, Terre Haute, IN 47802, (812) 234-2617
+- Plastic bags: Walmart Supercenter, 5555 US-41, Terre Haute, IN 47802, (812) 238-0506
+- Regular recycling: Republic Services Recycling Center, 3400 S 7th St, Terre Haute, IN 47802, (812) 232-2627
+
 Example response:
-{"item_name":"Plastic Water Bottle","is_recyclable":true,"bin_color":"Blue","disposal_method":"Place in recycling bin","preparation":"Rinse clean and remove cap","confidence":0.95}`;
+{"item_name":"Battery","is_recyclable":false,"bin_color":"Special","disposal_method":"Take to hazardous waste center","preparation":"Keep in original packaging if possible","disposal_location":"Vigo County Household Hazardous Waste Center","disposal_address":"3025 S 4 1/2 St, Terre Haute, IN 47802","disposal_phone":"(812) 462-3370","confidence":0.95}`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -155,12 +167,44 @@ export function interpretWithRules(labels: Array<{ name: string; value: number }
     { pattern: /tissue|napkin|paper towel/, name: 'Used Paper Product', bin: 'Black', prep: '' }
   ];
 
-  // Special disposal patterns
+  // Special disposal patterns with addresses
   const specialPatterns = [
-    { pattern: /battery/, name: 'Battery', bin: 'Special', prep: 'Take to hazardous waste center' },
-    { pattern: /electronics|computer|phone/, name: 'Electronics', bin: 'Special', prep: 'Take to e-waste recycling' },
-    { pattern: /paint|chemical/, name: 'Hazardous Material', bin: 'Special', prep: 'Take to hazardous waste center' },
-    { pattern: /light bulb|fluorescent/, name: 'Light Bulb', bin: 'Special', prep: 'Take to special recycling' }
+    {
+      pattern: /battery/,
+      name: 'Battery',
+      bin: 'Special',
+      prep: 'Take to hazardous waste center',
+      location: 'Vigo County Household Hazardous Waste Center',
+      address: '3025 S 4 1/2 St, Terre Haute, IN 47802',
+      phone: '(812) 462-3370'
+    },
+    {
+      pattern: /electronics|computer|phone|television|monitor/,
+      name: 'Electronics',
+      bin: 'Special',
+      prep: 'Take to e-waste recycling',
+      location: 'Best Buy',
+      address: '3401 US-41, Terre Haute, IN 47802',
+      phone: '(812) 234-2617'
+    },
+    {
+      pattern: /paint|chemical|oil|pesticide/,
+      name: 'Hazardous Material',
+      bin: 'Special',
+      prep: 'Take to hazardous waste center',
+      location: 'Vigo County Household Hazardous Waste Center',
+      address: '3025 S 4 1/2 St, Terre Haute, IN 47802',
+      phone: '(812) 462-3370'
+    },
+    {
+      pattern: /light bulb|fluorescent|cfl/,
+      name: 'Light Bulb',
+      bin: 'Special',
+      prep: 'Take to hazardous waste center',
+      location: 'Vigo County Household Hazardous Waste Center',
+      address: '3025 S 4 1/2 St, Terre Haute, IN 47802',
+      phone: '(812) 462-3370'
+    }
   ];
 
   // Check patterns
@@ -190,7 +234,7 @@ export function interpretWithRules(labels: Array<{ name: string; value: number }
     }
   }
 
-  for (const { pattern, name, bin, prep } of specialPatterns) {
+  for (const { pattern, name, bin, prep, location, address, phone } of specialPatterns) {
     if (pattern.test(labelNames)) {
       return {
         item_name: name,
@@ -199,6 +243,9 @@ export function interpretWithRules(labels: Array<{ name: string; value: number }
         disposal_method: prep,
         preparation: '',
         special_instructions: 'Do not put in regular trash or recycling',
+        disposal_location: location,
+        disposal_address: address,
+        disposal_phone: phone,
         confidence: 0.8
       };
     }
