@@ -126,35 +126,35 @@ export default function Home() {
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                  <label className="block">
-                    <input
-                      ref={cameraInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <button className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-3">
-                      <Camera className="w-5 h-5" />
-                      <span>Take Photo</span>
-                      <ArrowRight className="w-5 h-5" />
-                    </button>
-                  </label>
+                  <button
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-3">
+                    <Camera className="w-5 h-5" />
+                    <span>Take Photo</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
 
-                  <label className="block">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <button className="w-full py-4 px-6 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-green-500 dark:hover:border-green-400 text-gray-700 dark:text-gray-200 font-semibold rounded-2xl shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-3">
-                      <Upload className="w-5 h-5" />
-                      <span>Upload Image</span>
-                    </button>
-                  </label>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full py-4 px-6 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-green-500 dark:hover:border-green-400 text-gray-700 dark:text-gray-200 font-semibold rounded-2xl shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-3">
+                    <Upload className="w-5 h-5" />
+                    <span>Upload Image</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                 </div>
               </div>
 
@@ -369,8 +369,8 @@ export default function Home() {
         )}
       </main>
 
-      {/* Bottom Navigation - Only show on results page */}
-      {image && <BottomNav />}
+      {/* Bottom Navigation - Always visible */}
+      <BottomNav />
     </div>
   );
 }
