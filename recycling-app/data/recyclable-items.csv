@@ -1,0 +1,21 @@
+item,category,recyclable,special_instructions
+Plastic Bottle,Plastic,Yes,Rinse clean and remove cap
+Glass Jar,Glass,Yes,Remove lid and rinse
+Pizza Box,Paper,Partial,Remove food debris and grease-soaked portions
+Aluminum Can,Metal,Yes,Rinse clean
+Plastic Bag,Plastic,No,Take to grocery store drop-off
+Styrofoam Container,Plastic,No,Place in regular trash
+Cardboard Box,Paper,Yes,Flatten and keep dry
+Paper Towel,Paper,No,Compost if possible
+Battery,Hazardous,Special,Take to designated drop-off location
+Electronics,E-Waste,Special,Take to e-waste collection center
+Motor Oil,Hazardous,Special,Take to hazardous waste facility
+Paint Can,Hazardous,Special,Dry out or take to hazardous waste facility
+Newspaper,Paper,Yes,Keep dry and bundle
+Glass Bottle,Glass,Yes,Rinse and remove cap
+Tin Can,Metal,Yes,Rinse clean and remove label
+Plastic Container #1,Plastic,Yes,Check bottom for recycling number
+Plastic Container #5,Plastic,Yes,Check bottom for recycling number
+Plastic Container #6,Plastic,No,Not accepted in curbside recycling
+Light Bulb,Hazardous,Special,Take to hardware store for recycling
+Tissue Paper,Paper,No,Place in regular trash
