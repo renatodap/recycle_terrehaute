@@ -32,9 +32,24 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!.env.local.example
 
 # vercel
 .vercel
+
+# Google Cloud credentials
+**/service-account.json
+**/google-credentials.json
+**/*-credentials.json
+*.serviceaccount.json
+
+# API keys and secrets
+*.key
+*.pem
+*.p12
+secret*
+secrets*
 
 # typescript
 *.tsbuildinfo
