@@ -1,10 +1,10 @@
 // Google Cloud Vision API Service using Service Account Credentials
-import vision from '@google-cloud/vision';
+import { ImageAnnotatorClient } from '@google-cloud/vision';
 import fs from 'fs';
 import path from 'path';
 
 // Initialize the client
-let visionClient: vision.ImageAnnotatorClient | null = null;
+let visionClient: ImageAnnotatorClient | null = null;
 
 /**
  * Setup Google Vision credentials from environment variables
@@ -46,7 +46,7 @@ function getVisionClient() {
     }
 
     // The client will automatically use GOOGLE_APPLICATION_CREDENTIALS env var
-    visionClient = new vision.ImageAnnotatorClient();
+    visionClient = new ImageAnnotatorClient();
   }
   return visionClient;
 }
