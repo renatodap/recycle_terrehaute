@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapPin, Phone, Clock, Navigation, Sparkles, Recycle, AlertTriangle, Monitor, Heart, ShoppingBag } from 'lucide-react';
+import { MapPin, Phone, Clock, Navigation, Sparkles, Recycle, AlertTriangle, Monitor, Heart, ShoppingBag, MapPinned } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 
 type Location = {
@@ -83,14 +83,94 @@ const materialFilters = [
 export default function LocationsPage() {
   const [filter, setFilter] = useState('all');
   const [filteredLocations, setFilteredLocations] = useState(locations);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationsWithDistance, setLocationsWithDistance] = useState(locations);
 
   useEffect(() => {
-    if (filter === 'all') {
-      setFilteredLocations(locations);
-    } else {
-      setFilteredLocations(locations.filter(loc => loc.type === filter));
+    // Get user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log('Location permission denied or error:', error);
+        }
+      );
     }
-  }, [filter]);
+  }, []);
+
+  useEffect(() => {
+    // Calculate distances when user location is available
+    if (userLocation && userLocation.lat && userLocation.lng) {
+      const withDistances = locations.map(loc => ({
+        ...loc,
+        distance: loc.lat && loc.lng ? calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          loc.lat,
+          loc.lng
+        ) : undefined
+      })).sort((a, b) => (a.distance || 999) - (b.distance || 999));
+
+      setLocationsWithDistance(withDistances);
+
+      if (filter === 'all') {
+        setFilteredLocations(withDistances);
+      } else {
+        setFilteredLocations(withDistances.filter(loc => loc.type === filter));
+      }
+    } else {
+      if (filter === 'all') {
+        setFilteredLocations(locations);
+      } else {
+        setFilteredLocations(locations.filter(loc => loc.type === filter));
+      }
+    }
+  }, [filter, userLocation]);
+
+  // Calculate distance between two points
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Check if location is currently open
+  const isLocationOpen = (hours: string) => {
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutes since midnight
+
+    // Simple parser for common hours formats
+    if (hours.toLowerCase().includes('24 hours')) return true;
+    if (hours.toLowerCase().includes('closed')) return false;
+
+    // Check if today is mentioned (simplified logic)
+    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const today = days[currentDay];
+
+    if (hours.toLowerCase().includes(today)) {
+      // Extract time (simplified - would need more robust parsing)
+      const timeMatch = hours.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/gi);
+      if (timeMatch && timeMatch.length >= 2) {
+        // Simple check - assumes standard business hours
+        if (currentTime >= 8 * 60 && currentTime <= 17 * 60) {
+          return true;
+        }
+      }
+    }
+
+    return null; // Unknown
+  };
 
   const getTypeGradient = (type: string) => {
     switch (type) {
@@ -193,14 +273,41 @@ export default function LocationsPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-1">{location.name}</h3>
-                      <span className="inline-block px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-xs font-semibold rounded-full text-gray-700 dark:text-gray-200">
-                        {location.type === 'hazardous' ? 'Hazardous Waste' :
-                         location.type === 'electronics' ? 'Electronics' :
-                         location.type === 'recycling' ? 'Recycling Center' :
-                         location.type === 'donation' ? 'Donation Center' :
-                         location.type === 'retail' ? 'Retail Drop-off' :
-                         'Drop-off'}
-                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-block px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-xs font-semibold rounded-full text-gray-700 dark:text-gray-200">
+                          {location.type === 'hazardous' ? 'Hazardous Waste' :
+                           location.type === 'electronics' ? 'Electronics' :
+                           location.type === 'recycling' ? 'Recycling Center' :
+                           location.type === 'donation' ? 'Donation Center' :
+                           location.type === 'retail' ? 'Retail Drop-off' :
+                           'Drop-off'}
+                        </span>
+                        {location.distance !== undefined && (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-xs font-semibold rounded-full text-blue-700 dark:text-blue-300">
+                            <MapPinned className="w-3 h-3" />
+                            {location.distance < 1 ? `${(location.distance * 5280).toFixed(0)} ft` : `${location.distance.toFixed(1)} mi`}
+                          </span>
+                        )}
+                        {(() => {
+                          const openStatus = isLocationOpen(location.hours);
+                          if (openStatus === true) {
+                            return (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-xs font-semibold rounded-full text-green-700 dark:text-green-300">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                Open
+                              </span>
+                            );
+                          } else if (openStatus === false) {
+                            return (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 text-xs font-semibold rounded-full text-red-700 dark:text-red-300">
+                                <div className="w-2 h-2 bg-red-500 rounded-full" />
+                                Closed
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
                     </div>
                   </div>
 
