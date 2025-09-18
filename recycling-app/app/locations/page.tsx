@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapPin, Phone, Clock, Navigation } from 'lucide-react';
+import { MapPin, Phone, Clock, Navigation, Sparkles, Recycle, AlertTriangle, Monitor, Heart, ShoppingBag } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 
 type Location = {
@@ -73,11 +73,11 @@ const locations: Location[] = [
 ];
 
 const materialFilters = [
-  { label: 'All', value: 'all' },
-  { label: 'Hazardous', value: 'hazardous', color: 'bg-yellow-500' },
-  { label: 'Electronics', value: 'electronics', color: 'bg-blue-500' },
-  { label: 'Regular', value: 'recycling', color: 'bg-green-500' },
-  { label: 'Donation', value: 'donation', color: 'bg-purple-500' }
+  { label: 'All', value: 'all', icon: Sparkles, gradient: 'from-gray-400 to-gray-600' },
+  { label: 'Hazardous', value: 'hazardous', icon: AlertTriangle, gradient: 'from-amber-400 to-orange-600' },
+  { label: 'Electronics', value: 'electronics', icon: Monitor, gradient: 'from-blue-400 to-indigo-600' },
+  { label: 'Recycling', value: 'recycling', icon: Recycle, gradient: 'from-green-400 to-emerald-600' },
+  { label: 'Donation', value: 'donation', icon: Heart, gradient: 'from-pink-400 to-purple-600' }
 ];
 
 export default function LocationsPage() {
@@ -92,13 +92,24 @@ export default function LocationsPage() {
     }
   }, [filter]);
 
-  const getTypeColor = (type: string) => {
+  const getTypeGradient = (type: string) => {
     switch (type) {
-      case 'hazardous': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'electronics': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'recycling': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      case 'donation': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+      case 'hazardous': return 'from-amber-400 to-orange-600';
+      case 'electronics': return 'from-blue-400 to-indigo-600';
+      case 'recycling': return 'from-green-400 to-emerald-600';
+      case 'donation': return 'from-pink-400 to-purple-600';
+      default: return 'from-gray-400 to-gray-600';
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'hazardous': return AlertTriangle;
+      case 'electronics': return Monitor;
+      case 'recycling': return Recycle;
+      case 'donation': return Heart;
+      case 'retail': return ShoppingBag;
+      default: return MapPin;
     }
   };
 
@@ -109,122 +120,173 @@ export default function LocationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="min-h-screen relative pb-20">
+      {/* Beautiful gradient background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        {/* Animated orbs */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-green-300 to-emerald-400 rounded-full opacity-20 animate-float blur-3xl" />
+        <div className="absolute top-40 right-10 w-96 h-96 bg-gradient-to-br from-cyan-300 to-blue-400 rounded-full opacity-20 animate-float blur-3xl" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-gradient-to-br from-purple-300 to-pink-400 rounded-full opacity-20 animate-float blur-3xl" style={{ animationDelay: '4s' }} />
+      </div>
+
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-center">Drop-off Locations</h1>
+      <header className="relative glass sticky top-0 z-40 border-b border-white/20">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl mb-3 shadow-lg">
+              <MapPin className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              Drop-off Locations
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">Find the perfect place to recycle</p>
+          </div>
         </div>
       </header>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-14 z-30">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {materialFilters.map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-colors ${
-                  filter === f.value
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                {f.color && (
-                  <span className={`inline-block w-2 h-2 rounded-full ${f.color} mr-2`}></span>
-                )}
-                {f.label}
-              </button>
-            ))}
+      <div className="relative sticky top-[108px] z-30 glass border-b border-white/20">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide justify-center flex-wrap">
+            {materialFilters.map((f) => {
+              const Icon = f.icon;
+              return (
+                <button
+                  key={f.value}
+                  onClick={() => setFilter(f.value)}
+                  className={`group relative px-5 py-2.5 rounded-2xl font-medium transition-all transform hover:scale-105 ${
+                    filter === f.value
+                      ? `bg-gradient-to-r ${f.gradient} text-white shadow-lg`
+                      : 'bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    {f.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* Locations List */}
-      <main className="max-w-lg mx-auto px-4 py-6">
-        <div className="space-y-4">
-          {filteredLocations.map((location, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden"
-            >
-              <div className="p-4">
-                {/* Location Header */}
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{location.name}</h3>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getTypeColor(location.type)}`}>
-                      {location.type === 'hazardous' ? 'Hazardous Waste' :
-                       location.type === 'electronics' ? 'Electronics' :
-                       location.type === 'recycling' ? 'Recycling Center' :
-                       location.type === 'donation' ? 'Donation Center' :
-                       'Drop-off'}
-                    </span>
-                  </div>
-                </div>
+      <main className="relative max-w-6xl mx-auto px-4 py-8">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredLocations.map((location, index) => {
+            const TypeIcon = getTypeIcon(location.type);
+            return (
+              <div
+                key={index}
+                className="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {/* Gradient header */}
+                <div className={`h-2 bg-gradient-to-r ${getTypeGradient(location.type)}`} />
 
-                {/* Address */}
-                <div className="flex items-start space-x-2 mb-2 text-gray-600 dark:text-gray-400">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm">{location.address}</p>
-                </div>
-
-                {/* Hours */}
-                <div className="flex items-start space-x-2 mb-2 text-gray-600 dark:text-gray-400">
-                  <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm">{location.hours}</p>
-                </div>
-
-                {/* Phone */}
-                {location.phone && (
-                  <div className="flex items-center space-x-2 mb-3 text-gray-600 dark:text-gray-400">
-                    <Phone className="w-4 h-4 flex-shrink-0" />
-                    <a href={`tel:${location.phone}`} className="text-sm hover:text-green-600">
-                      {location.phone}
-                    </a>
-                  </div>
-                )}
-
-                {/* Materials Accepted */}
-                <div className="mb-3">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Accepts:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {location.materials.map((material, i) => (
-                      <span
-                        key={i}
-                        className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded-md"
-                      >
-                        {material}
+                <div className="p-6">
+                  {/* Icon and Title */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br ${getTypeGradient(location.type)} rounded-2xl shadow-lg`}>
+                      <TypeIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-1">{location.name}</h3>
+                      <span className="inline-block px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-xs font-semibold rounded-full text-gray-700 dark:text-gray-200">
+                        {location.type === 'hazardous' ? 'Hazardous Waste' :
+                         location.type === 'electronics' ? 'Electronics' :
+                         location.type === 'recycling' ? 'Recycling Center' :
+                         location.type === 'donation' ? 'Donation Center' :
+                         location.type === 'retail' ? 'Retail Drop-off' :
+                         'Drop-off'}
                       </span>
-                    ))}
+                    </div>
                   </div>
+
+                  {/* Info sections */}
+                  <div className="space-y-3 mb-4">
+                    {/* Address */}
+                    <div className="flex items-start gap-3 group/item">
+                      <div className="flex items-center justify-center w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                        <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 flex-1">{location.address}</p>
+                    </div>
+
+                    {/* Hours */}
+                    <div className="flex items-start gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 flex-1">{location.hours}</p>
+                    </div>
+
+                    {/* Phone */}
+                    {location.phone && (
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                          <Phone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <a
+                          href={`tel:${location.phone}`}
+                          className="text-sm text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                        >
+                          {location.phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Materials */}
+                  <div className="mb-4">
+                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Accepts</p>
+                    <div className="flex flex-wrap gap-2">
+                      {location.materials.map((material, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1.5 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 text-xs font-medium rounded-xl text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
+                        >
+                          {material}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Fee Badge */}
+                  {location.fee && (
+                    <div className="mb-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 text-sm font-semibold text-emerald-700 dark:text-emerald-300 rounded-xl">
+                        <Sparkles className="w-3 h-3" />
+                        {location.fee}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Get Directions Button */}
+                  <button
+                    onClick={() => openDirections(location.address)}
+                    className={`w-full py-3.5 px-6 bg-gradient-to-r ${getTypeGradient(location.type)} text-white font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 group`}
+                  >
+                    <Navigation className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                    <span>Get Directions</span>
+                  </button>
                 </div>
-
-                {/* Fee Info */}
-                {location.fee && (
-                  <div className="mb-3 text-sm text-green-600 dark:text-green-400 font-medium">
-                    {location.fee}
-                  </div>
-                )}
-
-                {/* Get Directions Button */}
-                <button
-                  onClick={() => openDirections(location.address)}
-                  className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
-                >
-                  <Navigation className="w-4 h-4" />
-                  <span>Get Directions</span>
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredLocations.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">
-              No locations found for this filter.
+          <div className="col-span-full text-center py-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-3xl mb-4">
+              <MapPin className="w-10 h-10 text-gray-500 dark:text-gray-400" />
+            </div>
+            <p className="text-xl font-medium text-gray-500 dark:text-gray-400">
+              No locations found for this filter
+            </p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+              Try selecting a different category
             </p>
           </div>
         )}
