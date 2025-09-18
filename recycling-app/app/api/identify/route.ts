@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { analyzeImageWithGoogleVision, isGoogleVisionConfigured } from '@/lib/google-vision-service';
 import { analyzeImageWithVision } from '@/lib/vision-service';
 import { analyzeImageWithClarifai } from '@/lib/clarifai-service';
 import { interpretWithOpenAI, interpretWithClarifai, interpretWithRules } from '@/lib/ai-interpreter';
@@ -23,12 +24,23 @@ export async function POST(request: NextRequest) {
     let visionService = 'google-vision';
 
     try {
-      if (process.env.GOOGLE_VISION_API_KEY) {
-        console.log('Attempting Google Vision API...');
+      // Try Google Cloud Vision with service account first
+      if (isGoogleVisionConfigured()) {
+        console.log('Attempting Google Cloud Vision API with service account...');
+        visionResult = await analyzeImageWithGoogleVision(image);
+        if (visionResult.success) {
+          visionService = 'google-vision-cloud';
+        } else {
+          throw new Error(visionResult.error || 'Google Vision failed');
+        }
+      }
+      // Try Google Vision with API key as second option
+      else if (process.env.GOOGLE_VISION_API_KEY) {
+        console.log('Attempting Google Vision API with API key...');
         visionResult = await analyzeImageWithVision(image, process.env.GOOGLE_VISION_API_KEY);
-        visionService = 'google-vision';
+        visionService = 'google-vision-apikey';
       } else {
-        throw new Error('Google Vision API key not configured');
+        throw new Error('Google Vision API not configured');
       }
     } catch (visionError) {
       console.error('Google Vision API failed, trying Clarifai:', visionError);
@@ -148,14 +160,15 @@ function detectMaterial(labels: Array<{ name: string; value: number }>): string 
 
 // Health check endpoint
 export async function GET(request: NextRequest) {
-  const hasGoogleVision = !!process.env.GOOGLE_VISION_API_KEY;
+  const hasGoogleVisionCloud = isGoogleVisionConfigured();
+  const hasGoogleVisionKey = !!process.env.GOOGLE_VISION_API_KEY;
   const hasOpenAI = !!process.env.OPENAI_API_KEY;
   const hasClarifai = !!process.env.CLARIFAI_PAT;
 
   return NextResponse.json({
     status: 'healthy',
     services: {
-      vision_primary: hasGoogleVision ? 'google-vision' : 'none',
+      vision_primary: hasGoogleVisionCloud ? 'google-vision-cloud' : hasGoogleVisionKey ? 'google-vision-apikey' : 'none',
       vision_fallback: hasClarifai ? 'clarifai' : 'none',
       ai_interpreter: hasOpenAI ? 'openai' : hasClarifai ? 'clarifai' : 'rules-based'
     },
@@ -165,7 +178,8 @@ export async function GET(request: NextRequest) {
       search: 'GET /api/search'
     },
     configured: {
-      google_vision: hasGoogleVision,
+      google_vision_cloud: hasGoogleVisionCloud,
+      google_vision_apikey: hasGoogleVisionKey,
       openai: hasOpenAI,
       clarifai: hasClarifai,
       fallback: 'always available'
