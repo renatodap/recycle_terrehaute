@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Battery, Monitor, Lightbulb, Droplet, Pill, TreePine, Package, AlertTriangle, Check, X } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import Link from 'next/link';
+import { Search, Battery, Monitor, Lightbulb, Droplet, Pill, TreePine, Package, AlertTriangle, ChevronLeft, MapPin, Phone, CheckCircle, XCircle } from 'lucide-react';
 
 // Common tricky items database
 const trickyItems = [
@@ -98,172 +98,224 @@ const trickyItems = [
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredItems, setFilteredItems] = useState(trickyItems);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim() === '') {
-      setFilteredItems(trickyItems);
-    } else {
-      const filtered = trickyItems.filter(item =>
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        item.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
-      );
-      setFilteredItems(filtered);
-    }
-  };
+  const filteredItems = trickyItems.filter(item => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return item.name.toLowerCase().includes(query) ||
+           item.tags.some(tag => tag.includes(query));
+  });
 
-  const getCategoryGradient = (category: string) => {
+  const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'hazardous': return 'from-amber-400 to-orange-600';
-      case 'electronics': return 'from-blue-400 to-indigo-600';
-      case 'organic': return 'from-green-400 to-emerald-600';
-      case 'special': return 'from-purple-400 to-pink-600';
-      default: return 'from-gray-400 to-gray-600';
+      case 'hazardous':
+        return 'bg-red-100 text-red-600';
+      case 'electronics':
+        return 'bg-blue-100 text-blue-600';
+      case 'organic':
+        return 'bg-green-100 text-green-600';
+      case 'special':
+        return 'bg-amber-100 text-amber-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
   return (
-    <div className="min-h-screen relative pb-20">
-      {/* Beautiful gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-purple-300 to-pink-400 rounded-full opacity-20 animate-float blur-3xl" />
-        <div className="absolute top-40 right-10 w-96 h-96 bg-gradient-to-br from-blue-300 to-cyan-400 rounded-full opacity-20 animate-float blur-3xl" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-gradient-to-br from-green-300 to-emerald-400 rounded-full opacity-20 animate-float blur-3xl" style={{ animationDelay: '4s' }} />
-      </div>
-
+    <div className="content-wrapper min-h-screen">
       {/* Header */}
-      <header className="relative glass sticky top-0 z-40 border-b border-white/20">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl mb-3 shadow-lg">
-              <Search className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Tricky Items Guide
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">Find out how to dispose of difficult items</p>
+      <header className="sticky top-0 z-10 glass border-b border-gray-200">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-lg font-semibold text-gray-900">Disposal Guide</h1>
           </div>
         </div>
       </header>
 
-      {/* Search Bar */}
-      <div className="relative sticky top-[108px] z-30 glass border-b border-white/20">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+      <main className="max-w-2xl mx-auto p-4">
+        {/* Search Bar */}
+        <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
+              placeholder="Search for items..."
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search for batteries, electronics, styrofoam..."
-              className="w-full pl-12 pr-4 py-3 bg-white/90 dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
             />
           </div>
         </div>
-      </div>
 
-      {/* Items Grid */}
-      <main className="relative max-w-6xl mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={index}
-                className="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {/* Category gradient header */}
-                <div className={`h-2 bg-gradient-to-r ${getCategoryGradient(item.category)}`} />
+        {/* Category Pills */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <button
+            onClick={() => setSearchQuery('')}
+            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+              !searchQuery ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All Items
+          </button>
+          <button
+            onClick={() => setSearchQuery('hazardous')}
+            className="px-4 py-2 bg-red-100 text-red-600 rounded-full text-sm font-medium whitespace-nowrap hover:bg-red-200 transition-colors"
+          >
+            Hazardous
+          </button>
+          <button
+            onClick={() => setSearchQuery('electronics')}
+            className="px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-sm font-medium whitespace-nowrap hover:bg-blue-200 transition-colors"
+          >
+            Electronics
+          </button>
+          <button
+            onClick={() => setSearchQuery('plastic')}
+            className="px-4 py-2 bg-amber-100 text-amber-600 rounded-full text-sm font-medium whitespace-nowrap hover:bg-amber-200 transition-colors"
+          >
+            Plastics
+          </button>
+        </div>
 
-                <div className="p-6">
-                  {/* Icon and Title */}
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br ${getCategoryGradient(item.category)} rounded-2xl shadow-lg`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-1">{item.name}</h3>
-                      <div className="flex items-center gap-2">
-                        {item.recyclable ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full">
-                            <Check className="w-3 h-3" />
-                            Recyclable
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-semibold rounded-full">
-                            <X className="w-3 h-3" />
-                            Not Recyclable
-                          </span>
-                        )}
-                      </div>
-                    </div>
+        {/* Items List */}
+        <div className="space-y-3">
+          {filteredItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => setSelectedItem(item)}
+              className="card p-4 w-full text-left hover:no-underline group"
+            >
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getCategoryColor(item.category)}`}>
+                  <item.icon className="w-6 h-6" />
+                </div>
+
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                    {item.recyclable ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-500" />
+                    )}
                   </div>
-
-                  {/* Disposal Method */}
-                  <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      {item.disposal}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {item.instructions}
-                    </p>
-                  </div>
-
-                  {/* Location Info */}
+                  <p className="text-sm text-gray-600 mb-2">{item.disposal}</p>
                   {item.location && item.location !== 'Curbside' && (
-                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl space-y-2">
-                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                        {item.location}
-                      </p>
-                      {item.address && item.address !== 'Various locations' && (
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                          {item.address}
-                        </p>
-                      )}
-                      {item.phone && (
-                        <a
-                          href={`tel:${item.phone}`}
-                          className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
-                        >
-                          {item.phone}
-                        </a>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Warning for hazardous */}
-                  {item.category === 'hazardous' && (
-                    <div className="mt-3 flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                        Hazardous - Handle with care
-                      </span>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <MapPin className="w-3 h-3" />
+                      <span>{item.location}</span>
                     </div>
                   )}
                 </div>
+
+                <div className="text-gray-400 group-hover:text-gray-600 transition-colors">
+                  →
+                </div>
               </div>
-            );
-          })}
+            </button>
+          ))}
         </div>
 
         {filteredItems.length === 0 && (
-          <div className="col-span-full text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-3xl mb-4">
-              <Search className="w-10 h-10 text-gray-500 dark:text-gray-400" />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-xl font-medium text-gray-500 dark:text-gray-400">
-              No items found
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              Try searching for something else
-            </p>
+            <p className="text-gray-600">No items found</p>
+            <p className="text-sm text-gray-500 mt-1">Try searching for something else</p>
           </div>
         )}
       </main>
 
-      <BottomNav />
+      {/* Item Detail Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setSelectedItem(null)} />
+
+          <div className="relative bg-white rounded-t-3xl w-full max-w-lg animate-slideUp">
+            <div className="p-6">
+              {/* Handle bar */}
+              <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6" />
+
+              {/* Item Header */}
+              <div className="flex items-start gap-4 mb-6">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${getCategoryColor(selectedItem.category)}`}>
+                  <selectedItem.icon className="w-7 h-7" />
+                </div>
+
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-1">{selectedItem.name}</h2>
+                  <p className={`inline-flex items-center gap-1 text-sm font-medium ${
+                    selectedItem.recyclable ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {selectedItem.recyclable ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Recyclable
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        Not Recyclable
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="space-y-4">
+                <div className="p-4 bg-amber-50 rounded-xl">
+                  <p className="text-sm font-medium text-amber-900 mb-1">Important</p>
+                  <p className="text-sm text-amber-700">{selectedItem.instructions}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-gray-900 mb-2">Disposal Method</p>
+                  <p className="text-gray-700">{selectedItem.disposal}</p>
+                </div>
+
+                {selectedItem.location && (
+                  <div className="p-4 bg-gray-50 rounded-xl space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 mb-1">Location</p>
+                      <p className="text-sm text-gray-700">{selectedItem.location}</p>
+                    </div>
+
+                    {selectedItem.address && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 mb-1">Address</p>
+                        <p className="text-sm text-gray-700">{selectedItem.address}</p>
+                      </div>
+                    )}
+
+                    {selectedItem.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-gray-500" />
+                        <a href={`tel:${selectedItem.phone}`} className="text-sm text-green-600 font-medium">
+                          {selectedItem.phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="btn-secondary w-full mt-6"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
