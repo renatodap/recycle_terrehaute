@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeImageWithGoogleVision, isGoogleVisionConfigured } from '@/lib/google-vision-service';
 import { analyzeImageWithVision } from '@/lib/vision-service';
+import { analyzeImageWithOpenAI, isOpenAIVisionConfigured } from '@/lib/openai-vision-service';
 import { analyzeImageWithClarifai } from '@/lib/clarifai-service';
 import { interpretWithOpenAI, interpretWithClarifai, interpretWithRules } from '@/lib/ai-interpreter';
 
@@ -19,13 +20,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Try Google Vision API first, fall back to Clarifai
+    // Step 1: Try vision APIs in order of preference
     let visionResult;
-    let visionService = 'google-vision';
+    let visionService = 'none';
 
     try {
-      // Try Google Cloud Vision with service account first
-      if (isGoogleVisionConfigured()) {
+      // Try OpenAI Vision first (best for general object recognition)
+      if (isOpenAIVisionConfigured()) {
+        console.log('Attempting OpenAI Vision API...');
+        visionResult = await analyzeImageWithOpenAI(image);
+        if (!visionResult.error && visionResult.labels.length > 0) {
+          visionService = 'openai-vision';
+        } else {
+          throw new Error(visionResult.error || 'OpenAI Vision returned no results');
+        }
+      }
+      // Try Google Cloud Vision with service account
+      else if (isGoogleVisionConfigured()) {
         console.log('Attempting Google Cloud Vision API with service account...');
         visionResult = await analyzeImageWithGoogleVision(image);
         if (visionResult.success) {
@@ -34,28 +45,37 @@ export async function POST(request: NextRequest) {
           throw new Error(visionResult.error || 'Google Vision failed');
         }
       }
-      // Try Google Vision with API key as second option
+      // Try Google Vision with API key
       else if (process.env.GOOGLE_VISION_API_KEY) {
         console.log('Attempting Google Vision API with API key...');
-        visionResult = await analyzeImageWithVision(image); // Function will use API key from env
+        visionResult = await analyzeImageWithVision(image);
         visionService = 'google-vision-apikey';
       } else {
-        throw new Error('Google Vision API not configured');
+        throw new Error('No vision API configured');
       }
     } catch (visionError) {
-      console.error('Google Vision API failed, trying Clarifai:', visionError);
+      console.error('Primary vision API failed:', visionError);
 
-      // Fallback to Clarifai
-      if (process.env.CLARIFAI_PAT) {
-        try {
+      // Try fallback options
+      try {
+        if (!visionService.startsWith('openai') && isOpenAIVisionConfigured()) {
+          console.log('Falling back to OpenAI Vision...');
+          visionResult = await analyzeImageWithOpenAI(image);
+          if (!visionResult.error && visionResult.labels.length > 0) {
+            visionService = 'openai-vision-fallback';
+          } else {
+            throw new Error('OpenAI Vision fallback failed');
+          }
+        } else if (process.env.CLARIFAI_PAT) {
+          console.log('Falling back to Clarifai...');
           visionResult = await analyzeImageWithClarifai(image);
           visionService = 'clarifai';
-        } catch (clarifaiError) {
-          console.error('Clarifai also failed:', clarifaiError);
-          throw new Error('Both vision services failed');
+        } else {
+          throw new Error('All vision services failed');
         }
-      } else {
-        throw new Error('No vision API keys configured');
+      } catch (fallbackError) {
+        console.error('All vision APIs failed:', fallbackError);
+        throw new Error('Unable to analyze image with any vision service');
       }
     }
 
@@ -166,6 +186,7 @@ function detectMaterial(labels: Array<{ name: string; value: number }>): string 
 
 // Health check endpoint
 export async function GET(request: NextRequest) {
+  const hasOpenAIVision = isOpenAIVisionConfigured();
   const hasGoogleVisionCloud = isGoogleVisionConfigured();
   const hasGoogleVisionKey = !!process.env.GOOGLE_VISION_API_KEY;
   const hasOpenAI = !!process.env.OPENAI_API_KEY;
@@ -174,7 +195,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     status: 'healthy',
     services: {
-      vision_primary: hasGoogleVisionCloud ? 'google-vision-cloud' : hasGoogleVisionKey ? 'google-vision-apikey' : 'none',
+      vision_primary: hasOpenAIVision ? 'openai-vision' : hasGoogleVisionCloud ? 'google-vision-cloud' : hasGoogleVisionKey ? 'google-vision-apikey' : 'none',
       vision_fallback: hasClarifai ? 'clarifai' : 'none',
       ai_interpreter: hasOpenAI ? 'openai' : hasClarifai ? 'clarifai' : 'rules-based'
     },
@@ -184,9 +205,10 @@ export async function GET(request: NextRequest) {
       search: 'GET /api/search'
     },
     configured: {
+      openai_vision: hasOpenAIVision,
       google_vision_cloud: hasGoogleVisionCloud,
       google_vision_apikey: hasGoogleVisionKey,
-      openai: hasOpenAI,
+      openai_interpreter: hasOpenAI,
       clarifai: hasClarifai,
       fallback: 'always available'
     }
