@@ -1,14 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Battery, Monitor, Lightbulb, Droplet, Pill, TreePine, Package, AlertTriangle, Check, X } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  LeafIcon, RecycleIcon, CameraIcon, SearchIcon, LocationIcon,
+  CheckCircleIcon, ArrowRightIcon, TrashIcon
+} from '@/components/icons/EcoIcons';
 
 // Common tricky items database
 const trickyItems = [
   {
     name: 'Batteries',
-    icon: Battery,
+    icon: '🔋',
     category: 'hazardous',
     recyclable: false,
     disposal: 'Special disposal required',
@@ -20,7 +23,7 @@ const trickyItems = [
   },
   {
     name: 'Electronics',
-    icon: Monitor,
+    icon: '💻',
     category: 'electronics',
     recyclable: false,
     disposal: 'E-waste recycling required',
@@ -32,7 +35,7 @@ const trickyItems = [
   },
   {
     name: 'Light Bulbs',
-    icon: Lightbulb,
+    icon: '💡',
     category: 'hazardous',
     recyclable: false,
     disposal: 'Special disposal for CFLs and fluorescent',
@@ -44,7 +47,7 @@ const trickyItems = [
   },
   {
     name: 'Motor Oil',
-    icon: Droplet,
+    icon: '🛢️',
     category: 'hazardous',
     recyclable: false,
     disposal: 'Hazardous waste center',
@@ -56,7 +59,7 @@ const trickyItems = [
   },
   {
     name: 'Medications',
-    icon: Pill,
+    icon: '💊',
     category: 'hazardous',
     recyclable: false,
     disposal: 'Drug take-back program',
@@ -67,7 +70,7 @@ const trickyItems = [
   },
   {
     name: 'Christmas Trees',
-    icon: TreePine,
+    icon: '🎄',
     category: 'organic',
     recyclable: true,
     disposal: 'Curbside pickup in January',
@@ -77,7 +80,7 @@ const trickyItems = [
   },
   {
     name: 'Styrofoam',
-    icon: Package,
+    icon: '📦',
     category: 'trash',
     recyclable: false,
     disposal: 'Regular trash only',
@@ -86,19 +89,47 @@ const trickyItems = [
   },
   {
     name: 'Plastic Bags',
-    icon: Package,
+    icon: '🛍️',
     category: 'special',
     recyclable: false,
     disposal: 'Store drop-off only',
     location: 'Walmart, Kroger, or other grocery stores',
     instructions: 'Never put plastic bags in recycling bin. Return to store collection bins.',
     tags: ['plastic', 'bag', 'grocery', 'shopping', 'film']
+  },
+  {
+    name: 'Paint Cans',
+    icon: '🎨',
+    category: 'hazardous',
+    recyclable: false,
+    disposal: 'Hazardous waste disposal',
+    location: 'Vigo County Household Hazardous Waste Center',
+    address: '3025 S 4 1/2 St, Terre Haute, IN 47802',
+    phone: '(812) 462-3370',
+    instructions: 'Latex paint can be dried out and thrown away. Oil-based paint needs special disposal.',
+    tags: ['paint', 'paint can', 'latex', 'oil-based', 'primer']
   }
 ];
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredItems, setFilteredItems] = useState(trickyItems);
+
+  // Suppress hydration warnings from browser extensions
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      [data-gr-ext-installed],
+      [data-grammarly-part],
+      grammarly-desktop-integration {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -113,157 +144,186 @@ export default function SearchPage() {
     }
   };
 
-  const getCategoryGradient = (category: string) => {
+  const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'hazardous': return 'from-amber-400 to-orange-600';
-      case 'electronics': return 'from-blue-400 to-indigo-600';
-      case 'organic': return 'from-green-400 to-emerald-600';
-      case 'special': return 'from-purple-400 to-pink-600';
-      default: return 'from-gray-400 to-gray-600';
+      case 'hazardous': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'electronics': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'organic': return 'bg-leaf-50 text-leaf-700 border-leaf-200';
+      case 'special': return 'bg-purple-50 text-purple-700 border-purple-200';
+      default: return 'bg-earth-100 text-earth-700 border-earth-200';
     }
   };
 
   return (
-    <div className="min-h-screen relative pb-20">
-      {/* Beautiful gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-purple-300 to-pink-400 rounded-full opacity-20 animate-float blur-3xl" />
-        <div className="absolute top-40 right-10 w-96 h-96 bg-gradient-to-br from-blue-300 to-cyan-400 rounded-full opacity-20 animate-float blur-3xl" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-gradient-to-br from-green-300 to-emerald-400 rounded-full opacity-20 animate-float blur-3xl" style={{ animationDelay: '4s' }} />
-      </div>
+    <div className="min-h-screen bg-paper relative">
+      {/* Paper texture overlay */}
+      <div className="absolute inset-0 opacity-30 bg-paper-texture pointer-events-none"></div>
 
-      {/* Header */}
-      <header className="relative glass sticky top-0 z-40 border-b border-white/20">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl mb-3 shadow-lg">
-              <Search className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Tricky Items Guide
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">Find out how to dispose of difficult items</p>
-          </div>
-        </div>
-      </header>
-
-      {/* Search Bar */}
-      <div className="relative sticky top-[108px] z-30 glass border-b border-white/20">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search for batteries, electronics, styrofoam..."
-              className="w-full pl-12 pr-4 py-3 bg-white/90 dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Items Grid */}
-      <main className="relative max-w-6xl mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={index}
-                className="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+      <div className="relative min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="px-4 py-6 border-b border-earth-100">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <Link
+                href="/"
+                className="p-2 hover:bg-earth-100 rounded-xl transition-colors text-earth-600"
               >
-                {/* Category gradient header */}
-                <div className={`h-2 bg-gradient-to-r ${getCategoryGradient(item.category)}`} />
+                <ArrowRightIcon className="w-4 h-4 rotate-180" />
+              </Link>
+              <div className="flex-1 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 mb-2">
+                  <SearchIcon className="w-10 h-10 text-leaf-600" />
+                </div>
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-earth-900">
+                  Disposal Guide
+                </h1>
+                <p className="font-body text-xs sm:text-sm text-earth-600 mt-1">
+                  Find where to recycle tricky items
+                </p>
+              </div>
+              <div className="w-9"></div>
+            </div>
 
-                <div className="p-6">
-                  {/* Icon and Title */}
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br ${getCategoryGradient(item.category)} rounded-2xl shadow-lg`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-1">{item.name}</h3>
-                      <div className="flex items-center gap-2">
-                        {item.recyclable ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full">
-                            <Check className="w-3 h-3" />
-                            Recyclable
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-semibold rounded-full">
-                            <X className="w-3 h-3" />
-                            Not Recyclable
-                          </span>
-                        )}
+            {/* Search Bar */}
+            <div className="relative">
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-earth-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search for items..."
+                className="w-full pl-11 pr-4 py-3 bg-paper-light border border-earth-200 rounded-full focus:outline-none focus:border-leaf-400 font-body text-sm text-earth-800 placeholder-earth-500 transition-colors"
+                data-gr-ext-disabled="true"
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* Items Grid */}
+        <main className="flex-grow px-4 py-6">
+          <div className="max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {filteredItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="paper-card hover:shadow-paper transition-all duration-200 animate-fadeIn"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="p-4 sm:p-5">
+                    {/* Icon and Title */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className="text-2xl">{item.icon}</span>
+                      <div className="flex-1">
+                        <h3 className="font-display text-base sm:text-lg font-bold text-earth-900">
+                          {item.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          {item.recyclable ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-leaf-100 text-leaf-700 text-xs font-semibold rounded-full">
+                              <CheckCircleIcon className="w-3 h-3" />
+                              Recyclable
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                              <TrashIcon className="w-3 h-3" />
+                              Not Recyclable
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Disposal Method */}
-                  <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      {item.disposal}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {item.instructions}
-                    </p>
-                  </div>
-
-                  {/* Location Info */}
-                  {item.location && item.location !== 'Curbside' && (
-                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl space-y-2">
-                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                        {item.location}
-                      </p>
-                      {item.address && item.address !== 'Various locations' && (
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                          {item.address}
-                        </p>
-                      )}
-                      {item.phone && (
-                        <a
-                          href={`tel:${item.phone}`}
-                          className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
-                        >
-                          {item.phone}
-                        </a>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Warning for hazardous */}
-                  {item.category === 'hazardous' && (
-                    <div className="mt-3 flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                        Hazardous - Handle with care
+                    {/* Category Badge */}
+                    <div className="mb-3">
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full border ${getCategoryColor(item.category)}`}>
+                        {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                       </span>
                     </div>
-                  )}
+
+                    {/* Instructions */}
+                    <p className="font-body text-xs sm:text-sm text-earth-700 leading-relaxed mb-3">
+                      {item.instructions}
+                    </p>
+
+                    {/* Location Info */}
+                    {item.location && item.location !== 'Curbside' && (
+                      <div className="p-3 bg-earth-50 rounded-lg space-y-2">
+                        <div className="flex items-start gap-2">
+                          <LocationIcon className="w-3 h-3 text-earth-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-xs font-semibold text-earth-800">
+                              {item.location}
+                            </p>
+                            {item.address && item.address !== 'Various locations' && (
+                              <p className="text-xs text-earth-600 mt-0.5">
+                                {item.address}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {item.address && item.address !== 'Various locations' && (
+                          <button
+                            onClick={() => {
+                              const addr = encodeURIComponent(item.address!);
+                              window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr}`, '_blank');
+                            }}
+                            className="w-full py-1.5 px-2 bg-leaf-500 hover:bg-leaf-600 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1"
+                          >
+                            <LocationIcon className="w-3 h-3" />
+                            Get Directions
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Warning for hazardous */}
+                    {item.category === 'hazardous' && (
+                      <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                        <span className="text-xs font-semibold text-amber-700">
+                          ⚠️ Hazardous - Handle with Care
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {filteredItems.length === 0 && (
-          <div className="col-span-full text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-3xl mb-4">
-              <Search className="w-10 h-10 text-gray-500 dark:text-gray-400" />
+              ))}
             </div>
-            <p className="text-xl font-medium text-gray-500 dark:text-gray-400">
-              No items found
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              Try searching for something else
-            </p>
-          </div>
-        )}
-      </main>
 
-      <BottomNav />
+            {filteredItems.length === 0 && (
+              <div className="text-center py-16">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-earth-100 rounded-2xl mb-4">
+                  <SearchIcon className="w-8 h-8 text-earth-400" />
+                </div>
+                <p className="font-display text-lg font-medium text-earth-600">
+                  No items found
+                </p>
+                <p className="font-body text-sm text-earth-500 mt-1">
+                  Try searching for something else
+                </p>
+              </div>
+            )}
+
+            {/* Bottom Actions */}
+            <div className="mt-8 text-center">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 py-3 px-6 bg-leaf-500 hover:bg-leaf-600 text-white font-semibold rounded-full transition-all duration-200"
+              >
+                <CameraIcon className="w-4 h-4" />
+                <span>Scan an Item</span>
+              </Link>
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <div className="py-4 text-center border-t border-earth-100">
+          <p className="text-xs text-earth-500 font-body">
+            Keeping Terre Haute clean 🌿
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

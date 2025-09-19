@@ -1,15 +1,32 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Camera, Upload, X, CheckCircle, XCircle, AlertTriangle, MapPin, Phone, ArrowRight, Sparkles } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { LeafIcon, RecycleIcon, CameraIcon, SearchIcon, UploadIcon } from '@/components/icons/EcoIcons';
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
   const [result, setResult] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Suppress hydration warnings from browser extensions
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      [data-gr-ext-installed],
+      [data-grammarly-part],
+      grammarly-desktop-integration {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const handleImageUpload = async (file: File) => {
     const reader = new FileReader();
@@ -59,6 +76,25 @@ export default function Home() {
     if (file) handleImageUpload(file);
   };
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files[0]);
+    }
+  };
+
   const reset = () => {
     setImage(null);
     setResult(null);
@@ -66,276 +102,248 @@ export default function Home() {
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
-  const getStatusColor = (recyclable: boolean | undefined) => {
-    if (recyclable === true) return 'from-green-400 to-emerald-600';
-    if (recyclable === false) return 'from-red-400 to-rose-600';
-    return 'from-gray-400 to-gray-600';
-  };
-
-  const getStatusIcon = (recyclable: boolean | undefined) => {
-    if (recyclable === true) return <CheckCircle className="w-12 h-12 md:w-16 md:h-16" />;
-    if (recyclable === false) return <XCircle className="w-12 h-12 md:w-16 md:h-16" />;
-    return <AlertTriangle className="w-12 h-12 md:w-16 md:h-16" />;
-  };
-
-  const getStatusText = (recyclable: boolean | undefined) => {
-    if (recyclable === true) return 'Recyclable';
-    if (recyclable === false) return 'Not Recyclable';
-    return 'Unknown';
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-200 dark:bg-green-900 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 dark:bg-blue-900 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
+    <div className="min-h-screen bg-paper relative">
+      {/* Paper texture overlay */}
+      <div className="absolute inset-0 opacity-30 bg-paper-texture pointer-events-none"></div>
 
-      <main className="relative z-10">
-        {!image ? (
-          // Initial View - Camera/Upload
-          <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
-            <div className="w-full max-w-md mx-auto">
+      {!image ? (
+        // Upload Page
+        <div className="relative min-h-screen flex flex-col">
+          {/* Header Section */}
+          <div className="flex-grow flex flex-col justify-center px-4 py-8 sm:py-12">
+            <div className="w-full max-w-md mx-auto space-y-8">
               {/* Logo and Title */}
-              <div className="text-center mb-8 animate-fade-in">
-                <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-400 to-emerald-600 rounded-3xl mb-4 shadow-xl">
-                  <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-white" />
+              <div className="text-center space-y-4 animate-fadeIn">
+                <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24">
+                  <RecycleIcon className="w-full h-full text-leaf-600 animate-float" />
                 </div>
-                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
-                  Terre Haute Recycles
+                <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl font-bold text-earth-900">
+                  Recycle Smart
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">
-                  Snap. Check. Recycle.
+                <p className="font-body text-sm sm:text-base text-earth-600 max-w-xs mx-auto">
+                  Snap a photo and instantly know how to recycle in Terre Haute
                 </p>
               </div>
 
-              {/* Action Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 animate-slide-up">
-                <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-full mb-4">
-                    <Camera className="w-16 h-16 md:w-20 md:h-20 text-green-600 dark:text-green-400 animate-pulse-soft" />
+              {/* Upload Card */}
+              <div
+                className={`
+                  paper-card p-6 sm:p-8 transition-all duration-300
+                  ${dragActive ? 'scale-[1.02] shadow-lifted border-2 border-leaf-400' : ''}
+                `}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <div className="text-center space-y-6">
+                  {/* Upload Icon */}
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-leaf-200 rounded-full blur-2xl opacity-20 animate-pulse-soft"></div>
+                    <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-paper-light to-leaf-50 rounded-full flex items-center justify-center">
+                      {dragActive ? (
+                        <UploadIcon className="w-12 h-12 sm:w-16 sm:h-16 text-leaf-600 animate-pulse" />
+                      ) : (
+                        <CameraIcon className="w-12 h-12 sm:w-16 sm:h-16 text-leaf-600" />
+                      )}
+                    </div>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-semibold mb-2">
-                    Is it recyclable?
-                  </h2>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Take a photo to find out instantly
-                  </p>
-                </div>
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <button
-                    onClick={() => cameraInputRef.current?.click()}
-                    className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-3">
-                    <Camera className="w-5 h-5" />
-                    <span>Take Photo</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
+                  <div className="space-y-2">
+                    <p className="font-display text-lg sm:text-xl font-semibold text-earth-900">
+                      {dragActive ? 'Drop your image here' : 'Upload an image'}
+                    </p>
+                    <p className="font-body text-xs sm:text-sm text-earth-600">
+                      Drag & drop or click to select
+                    </p>
+                  </div>
 
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-4 px-6 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-green-500 dark:hover:border-green-400 text-gray-700 dark:text-gray-200 font-semibold rounded-2xl shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-3">
-                    <Upload className="w-5 h-5" />
-                    <span>Upload Image</span>
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="paper-card py-3 px-4 bg-leaf-500 hover:bg-leaf-600 text-white font-semibold text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2 group"
+                    >
+                      <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
+                      <span>Camera</span>
+                    </button>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      data-gr-ext-disabled="true"
+                    />
+
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="paper-card py-3 px-4 bg-paper-light hover:bg-earth-100 text-earth-700 font-semibold text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2 border border-earth-200 group"
+                    >
+                      <UploadIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
+                      <span>Gallery</span>
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      data-gr-ext-disabled="true"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Help Text */}
-              <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  AI-powered • Instant results • Local rules
-                </p>
-              </div>
+              {/* Search Link */}
+              <Link
+                href="/search"
+                className="paper-card p-4 flex items-center justify-between group hover:shadow-paper transition-all duration-200"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-earth-100 flex items-center justify-center">
+                    <SearchIcon className="w-5 h-5 text-earth-600" />
+                  </div>
+                  <span className="font-body text-earth-700 text-sm sm:text-base">Browse disposal guide</span>
+                </div>
+                <svg className="w-5 h-5 text-earth-400 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
           </div>
-        ) : (
-          // Results View
-          <div className="min-h-screen">
-            {/* Header with close button */}
-            <div className="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
-              <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-                <h1 className="text-xl font-semibold">Results</h1>
-                <button
-                  onClick={reset}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
 
-            <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
+          {/* Footer */}
+          <div className="py-4 text-center">
+            <p className="text-xs text-earth-500 font-body">
+              Keeping Terre Haute clean 🌿
+            </p>
+          </div>
+        </div>
+      ) : (
+        // Results View
+        <div className="relative min-h-screen flex flex-col">
+          <div className="flex-grow px-4 py-6 sm:py-8">
+            <div className="w-full max-w-md mx-auto space-y-4 sm:space-y-6">
+              {/* Back Button */}
+              <button
+                onClick={reset}
+                className="flex items-center gap-2 text-earth-600 hover:text-earth-800 font-body text-sm transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+
               {/* Image Preview */}
-              <div className="mb-6 animate-fade-in">
-                <div className="relative rounded-2xl overflow-hidden shadow-xl">
+              <div className="paper-card overflow-hidden">
+                <div className="aspect-[4/3] bg-earth-50">
                   <img
                     src={image}
-                    alt="Scanned item"
-                    className="w-full h-64 md:h-96 object-cover"
+                    alt="Analyzed item"
+                    className="w-full h-full object-contain"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                 </div>
               </div>
 
               {loading ? (
                 // Loading State
-                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-12 animate-fade-in">
-                  <div className="flex flex-col items-center space-y-6">
+                <div className="paper-card p-8 sm:p-12">
+                  <div className="flex flex-col items-center space-y-4">
                     <div className="relative">
-                      <div className="w-20 h-20 border-4 border-green-200 dark:border-green-800 rounded-full"></div>
-                      <div className="absolute inset-0 w-20 h-20 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="absolute inset-0 bg-leaf-200 rounded-full blur-xl animate-pulse"></div>
+                      <RecycleIcon className="relative w-12 h-12 sm:w-16 sm:h-16 text-leaf-600 animate-spin" />
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-medium">Analyzing image...</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Using AI to identify recyclables</p>
+                      <p className="font-display text-base sm:text-lg font-semibold text-earth-900">Analyzing...</p>
+                      <p className="font-body text-xs sm:text-sm text-earth-600 mt-1">This takes 2-3 seconds</p>
                     </div>
                   </div>
                 </div>
               ) : result ? (
-                // Result Display
-                <div className="space-y-4 animate-slide-up">
-                  {/* Main Result Card */}
-                  <div className={`bg-gradient-to-br ${getStatusColor(result.recyclable)} rounded-3xl shadow-xl p-8 text-white`}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                // Results Display
+                <div className="space-y-4">
+                  {/* Main Result */}
+                  <div className={`paper-card p-6 border-2 ${
+                    result.recyclable === true ? 'border-leaf-400 bg-gradient-to-br from-leaf-50 to-paper-light' :
+                    result.recyclable === false ? 'border-red-300 bg-gradient-to-br from-red-50 to-paper-light' :
+                    'border-earth-200'
+                  }`}>
+                    <div className="space-y-4">
+                      {/* Item Name and Status */}
+                      <div>
+                        <h2 className="font-display text-xl sm:text-2xl font-bold text-earth-900">
                           {result.item?.name || result.error || 'Unknown Item'}
                         </h2>
-                        <p className="text-2xl md:text-3xl font-medium opacity-90">
-                          {getStatusText(result.recyclable)}
-                        </p>
-                        {result.confidence && (
-                          <div className="mt-4">
-                            <div className="flex items-center space-x-2">
-                              <div className="flex-1 bg-white/20 rounded-full h-2">
-                                <div
-                                  className="bg-white rounded-full h-2 transition-all duration-1000"
-                                  style={{ width: `${result.confidence * 100}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-sm font-medium">
-                                {(result.confidence * 100).toFixed(0)}%
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="ml-4">
-                        {getStatusIcon(result.recyclable)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Simplified Disposal Instructions */}
-                  {result.item && !result.error && (
-                    <div className="space-y-4">
-                      {/* Main Disposal Card */}
-                      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6">
-                        {/* Bin Type Badge */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className={`inline-flex items-center px-4 py-2 rounded-2xl font-semibold ${
-                            result.item.bin_color === 'Blue' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-                            result.item.bin_color === 'Black' ? 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300' :
-                            result.item.bin_color === 'Special' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' :
-                            'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300'
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${
+                            result.recyclable === true ? 'bg-leaf-100 text-leaf-700' :
+                            result.recyclable === false ? 'bg-red-100 text-red-700' :
+                            'bg-earth-100 text-earth-700'
                           }`}>
-                            {result.item.bin_color === 'Blue' ? '♻️ Recycling Bin' :
-                             result.item.bin_color === 'Black' ? '🗑️ Regular Trash' :
-                             result.item.bin_color === 'Special' ? '⚠️ Special Disposal' :
-                             '📦 ' + result.item.bin_color}
-                          </div>
-                        </div>
-
-                        {/* Simple Instructions */}
-                        <div className="space-y-3">
-                          <p className="text-lg font-medium text-gray-800 dark:text-gray-200">
-                            {result.item.disposal_method}
-                          </p>
-
-                          {result.item.preparation && (
-                            <p className="text-gray-600 dark:text-gray-400">
-                              💡 {result.item.preparation}
-                            </p>
+                            {result.recyclable === true ? '✓ Recyclable' :
+                             result.recyclable === false ? '✗ Not Recyclable' :
+                             '? Unknown'}
+                          </span>
+                          {result.confidence && (
+                            <span className="text-xs text-earth-500">
+                              {(result.confidence * 100).toFixed(0)}% sure
+                            </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Special Disposal Card - Only for hazardous/special items */}
-                      {result.item.bin_color === 'Special' && (result.item.disposal_location || result.item.disposal_address) && (
-                        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-3xl p-6 border-2 border-amber-200 dark:border-amber-800">
-                          <div className="flex items-center mb-3">
-                            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mr-2" />
-                            <span className="font-semibold text-amber-800 dark:text-amber-200">Special Disposal Location</span>
-                          </div>
+                      {/* Disposal Instructions */}
+                      {result.item && !result.error && (
+                        <div className="space-y-3 pt-3 border-t border-earth-100">
+                          {result.item.disposal_method && (
+                            <div>
+                              <p className="font-body text-xs text-earth-600 uppercase tracking-wide mb-1">How to dispose</p>
+                              <p className="font-body text-sm sm:text-base text-earth-800">{result.item.disposal_method}</p>
+                            </div>
+                          )}
 
-                          <div className="space-y-3">
-                            {result.item.disposal_location && (
-                              <p className="font-medium text-amber-900 dark:text-amber-100">
-                                {result.item.disposal_location}
-                              </p>
-                            )}
+                          {result.item.preparation && (
+                            <div>
+                              <p className="font-body text-xs text-earth-600 uppercase tracking-wide mb-1">Preparation</p>
+                              <p className="font-body text-sm sm:text-base text-earth-800">{result.item.preparation}</p>
+                            </div>
+                          )}
 
-                            {result.item.disposal_address && (
-                              <div className="flex items-start gap-2">
-                                <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" />
-                                <p className="text-amber-800 dark:text-amber-200 text-sm">
-                                  {result.item.disposal_address}
-                                </p>
-                              </div>
-                            )}
+                          {result.item.bin_color && (
+                            <div>
+                              <p className="font-body text-xs text-earth-600 uppercase tracking-wide mb-1">Bin</p>
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                                result.item.bin_color === 'Blue' ? 'bg-blue-100 text-blue-700' :
+                                result.item.bin_color === 'Black' ? 'bg-earth-800 text-white' :
+                                'bg-earth-200 text-earth-700'
+                              }`}>
+                                {result.item.bin_color} Bin
+                              </span>
+                            </div>
+                          )}
 
-                            {result.item.disposal_phone && (
-                              <div className="flex items-center gap-2">
-                                <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                                <a
-                                  href={`tel:${result.item.disposal_phone}`}
-                                  className="text-amber-800 dark:text-amber-200 text-sm hover:underline"
-                                >
-                                  {result.item.disposal_phone}
-                                </a>
-                              </div>
-                            )}
-
-                            {result.item.disposal_address && (
-                              <button
-                                onClick={() => {
-                                  const encodedAddress = encodeURIComponent(result.item.disposal_address);
-                                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`, '_blank');
-                                }}
-                                className="w-full mt-3 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-medium rounded-xl shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
-                              >
-                                <MapPin className="w-4 h-4" />
-                                <span>Get Directions</span>
-                              </button>
-                            )}
-                          </div>
+                          {result.item.disposal_location && (
+                            <div className="p-3 bg-amber-50 rounded-xl">
+                              <p className="font-body text-xs text-amber-800 uppercase tracking-wide mb-1">Special disposal</p>
+                              <p className="font-body text-sm font-semibold text-amber-900">{result.item.disposal_location}</p>
+                              {result.item.disposal_address && (
+                                <p className="font-body text-xs text-amber-700 mt-1">{result.item.disposal_address}</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
+                  </div>
 
-                  {/* Scan Another Button */}
+                  {/* Action Buttons */}
                   <button
                     onClick={reset}
-                    className="w-full py-4 px-6 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                    className="w-full paper-card py-3 bg-leaf-500 hover:bg-leaf-600 text-white font-semibold transition-all duration-200"
                   >
                     Scan Another Item
                   </button>
@@ -343,11 +351,8 @@ export default function Home() {
               ) : null}
             </div>
           </div>
-        )}
-      </main>
-
-      {/* Bottom Navigation - Always visible */}
-      <BottomNav />
+        </div>
+      )}
     </div>
   );
 }
