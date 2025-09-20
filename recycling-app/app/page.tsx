@@ -97,7 +97,7 @@ export default function Home() {
                 <Recycle className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Terre Haute Recycles</h1>
-              <p className="text-gray-600 text-sm">Snap a photo to check if it's recyclable</p>
+              <p className="text-gray-600 text-sm">Snap a photo to check if it&apos;s recyclable</p>
             </div>
           </header>
 
