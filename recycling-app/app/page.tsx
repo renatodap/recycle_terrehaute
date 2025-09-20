@@ -62,7 +62,29 @@ export default function Home() {
       }
 
       const data = await response.json();
-      setResult(data);
+
+      // Check if the API returned an error
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to analyze image');
+      }
+
+      // Extract the recycling result from the API response
+      // The API returns { success, item: {...}, confidence, ... }
+      // But we need just the item data with confidence
+      const recyclingResult: RecyclingResult = {
+        item_name: data.item?.name || 'Unknown Item',
+        is_recyclable: data.item?.is_recyclable || false,
+        bin_color: data.item?.bin_color || 'Black',
+        disposal_method: data.item?.disposal_method || 'Place in regular trash',
+        preparation: data.item?.preparation || '',
+        special_instructions: data.item?.special_instructions,
+        disposal_location: data.item?.disposal_location,
+        disposal_address: data.item?.disposal_address,
+        disposal_phone: data.item?.disposal_phone,
+        confidence: data.confidence || 0.5
+      };
+
+      setResult(recyclingResult);
     } catch (error) {
       console.error('Error analyzing image:', error);
       alert('Failed to analyze image. Please try again.');
