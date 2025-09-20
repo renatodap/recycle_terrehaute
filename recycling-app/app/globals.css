@@ -210,6 +210,27 @@ input:focus, textarea:focus {
   }
 }
 
+@keyframes loading-bar {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
@@ -228,6 +249,23 @@ input:focus, textarea:focus {
 
 .animate-scale {
   animation: scale 2s ease-in-out infinite;
+}
+
+.animate-loading-bar {
+  animation: loading-bar 2s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 ::-webkit-scrollbar {
