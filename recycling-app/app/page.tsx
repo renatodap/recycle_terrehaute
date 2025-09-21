@@ -5,6 +5,7 @@ import { Camera, Upload, HelpCircle, List } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AnalyzingScreen from '@/components/AnalyzingScreen';
 import ResultsScreen from '@/components/ResultsScreen';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { RecyclingResult } from '@/types/recycling';
 
 export default function Home() {
@@ -62,11 +63,22 @@ export default function Home() {
       }
 
       const data = await response.json();
+      console.log('API Response:', data);
 
       // Check if the API returned an error
       if (!data.success) {
+        console.error('API returned error:', data);
         throw new Error(data.error || 'Failed to analyze image');
       }
+
+      // Check if we have the expected data structure
+      if (!data.item) {
+        console.error('Invalid API response - missing item field:', data);
+        throw new Error('Invalid response from server');
+      }
+
+      // Log the item data for debugging
+      console.log('Item data from API:', data.item);
 
       // Extract the recycling result from the API response
       // The API returns { success, item: {...}, confidence, ... }
@@ -74,7 +86,7 @@ export default function Home() {
       const recyclingResult: RecyclingResult = {
         item_name: String(data.item?.name || 'Unknown Item'),
         is_recyclable: Boolean(data.item?.is_recyclable),
-        bin_color: data.item?.bin_color || 'Black',
+        bin_color: (data.item?.bin_color as 'Blue' | 'Green' | 'Black' | 'Special') || 'Black',
         disposal_method: String(data.item?.disposal_method || 'Place in regular trash'),
         preparation: String(data.item?.preparation || ''),
         special_instructions: data.item?.special_instructions ? String(data.item.special_instructions) : undefined,
@@ -84,6 +96,7 @@ export default function Home() {
         confidence: Number(data.confidence) || 0.5
       };
 
+      console.log('Processed result:', recyclingResult);
       setResult(recyclingResult);
     } catch (error) {
       console.error('Error analyzing image:', error);
@@ -99,14 +112,23 @@ export default function Home() {
   };
 
   if (isAnalyzing) {
-    return <AnalyzingScreen />;
+    return (
+      <ErrorBoundary>
+        <AnalyzingScreen />
+      </ErrorBoundary>
+    );
   }
 
   if (result) {
-    return <ResultsScreen result={result} onReset={resetApp} />;
+    return (
+      <ErrorBoundary>
+        <ResultsScreen result={result} onReset={resetApp} />
+      </ErrorBoundary>
+    );
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-white">
       {/* Header */}
       <header className="px-4 py-6">
@@ -201,5 +223,6 @@ export default function Home() {
         </div>
       </nav>
     </div>
+    </ErrorBoundary>
   );
 }

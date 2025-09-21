@@ -23,6 +23,21 @@ export default function ResultsScreen({ result, onReset }: Props) {
   const [showWhy, setShowWhy] = useState(false);
   const [showLocations, setShowLocations] = useState(false);
 
+  // Validate result object
+  if (!result) {
+    console.error('ResultsScreen received null/undefined result');
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-gray-600">No result to display</p>
+          <button onClick={onReset} className="mt-4 text-green-600 underline">
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Determine the main icon and color based on disposal method
   const getDisposalDisplay = () => {
     switch (result.bin_color) {
@@ -96,8 +111,8 @@ export default function ResultsScreen({ result, onReset }: Props) {
           {/* Item Detection */}
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-2">Detected:</p>
-            <h2 className="text-2xl font-bold text-gray-900">{result.item_name}</h2>
-            {result.confidence < 0.7 && (
+            <h2 className="text-2xl font-bold text-gray-900">{result?.item_name || 'Unknown Item'}</h2>
+            {(result?.confidence || 0) < 0.7 && (
               <p className="text-xs text-amber-600 mt-1">Low confidence - verify item type</p>
             )}
           </div>
