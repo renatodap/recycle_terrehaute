@@ -49,61 +49,71 @@ export default function Home() {
 
     setIsAnalyzing(true);
 
-    const formData = new FormData();
-    formData.append('image', file);
+    // Convert file to base64
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
 
-    try {
-      const response = await fetch('/api/identify', {
-        method: 'POST',
-        body: formData,
-      });
+      try {
+        const response = await fetch('/api/identify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: base64String
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to analyze image');
+        if (!response.ok) {
+          throw new Error('Failed to analyze image');
+        }
+
+        const data = await response.json();
+        console.log('API Response:', data);
+
+        // Check if the API returned an error
+        if (!data.success) {
+          console.error('API returned error:', data);
+          throw new Error(data.error || 'Failed to analyze image');
+        }
+
+        // Check if we have the expected data structure
+        if (!data.item) {
+          console.error('Invalid API response - missing item field:', data);
+          throw new Error('Invalid response from server');
+        }
+
+        // Log the item data for debugging
+        console.log('Item data from API:', data.item);
+
+        // Extract the recycling result from the API response
+        // The API returns { success, item: {...}, confidence, ... }
+        // But we need just the item data with confidence
+        const recyclingResult: RecyclingResult = {
+          item_name: String(data.item?.name || 'Unknown Item'),
+          is_recyclable: Boolean(data.item?.is_recyclable),
+          bin_color: (data.item?.bin_color as 'Blue' | 'Green' | 'Black' | 'Special') || 'Black',
+          disposal_method: String(data.item?.disposal_method || 'Place in regular trash'),
+          preparation: String(data.item?.preparation || ''),
+          special_instructions: data.item?.special_instructions ? String(data.item.special_instructions) : undefined,
+          disposal_location: data.item?.disposal_location ? String(data.item.disposal_location) : undefined,
+          disposal_address: data.item?.disposal_address ? String(data.item.disposal_address) : undefined,
+          disposal_phone: data.item?.disposal_phone ? String(data.item.disposal_phone) : undefined,
+          confidence: Number(data.confidence) || 0.5
+        };
+
+        console.log('Processed result:', recyclingResult);
+        setResult(recyclingResult);
+      } catch (error) {
+        console.error('Error analyzing image:', error);
+        alert('Failed to analyze image. Please try again.');
+      } finally {
+        setIsAnalyzing(false);
       }
+    };
 
-      const data = await response.json();
-      console.log('API Response:', data);
-
-      // Check if the API returned an error
-      if (!data.success) {
-        console.error('API returned error:', data);
-        throw new Error(data.error || 'Failed to analyze image');
-      }
-
-      // Check if we have the expected data structure
-      if (!data.item) {
-        console.error('Invalid API response - missing item field:', data);
-        throw new Error('Invalid response from server');
-      }
-
-      // Log the item data for debugging
-      console.log('Item data from API:', data.item);
-
-      // Extract the recycling result from the API response
-      // The API returns { success, item: {...}, confidence, ... }
-      // But we need just the item data with confidence
-      const recyclingResult: RecyclingResult = {
-        item_name: String(data.item?.name || 'Unknown Item'),
-        is_recyclable: Boolean(data.item?.is_recyclable),
-        bin_color: (data.item?.bin_color as 'Blue' | 'Green' | 'Black' | 'Special') || 'Black',
-        disposal_method: String(data.item?.disposal_method || 'Place in regular trash'),
-        preparation: String(data.item?.preparation || ''),
-        special_instructions: data.item?.special_instructions ? String(data.item.special_instructions) : undefined,
-        disposal_location: data.item?.disposal_location ? String(data.item.disposal_location) : undefined,
-        disposal_address: data.item?.disposal_address ? String(data.item.disposal_address) : undefined,
-        disposal_phone: data.item?.disposal_phone ? String(data.item.disposal_phone) : undefined,
-        confidence: Number(data.confidence) || 0.5
-      };
-
-      console.log('Processed result:', recyclingResult);
-      setResult(recyclingResult);
-    } catch (error) {
-      console.error('Error analyzing image:', error);
-      alert('Failed to analyze image. Please try again.');
-    } finally {
-      setIsAnalyzing(false);
-    }
+    reader.readAsDataURL(file);
   };
 
   const resetApp = () => {
