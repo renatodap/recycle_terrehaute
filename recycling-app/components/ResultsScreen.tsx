@@ -112,18 +112,18 @@ export default function ResultsScreen({ result, onReset }: Props) {
           </div>
 
           {/* Preparation Instructions */}
-          {result.preparation && (
+          {result.preparation && typeof result.preparation === 'string' && (
             <div className={`bg-white rounded-2xl border-2 ${display.borderColor} p-4`}>
               <p className="text-sm font-medium text-gray-700 mb-1">Preparation:</p>
-              <p className="text-gray-600">{result.preparation}</p>
+              <p className="text-gray-600">{String(result.preparation)}</p>
             </div>
           )}
 
           {/* Special Instructions */}
-          {result.special_instructions && (
+          {result.special_instructions && typeof result.special_instructions === 'string' && (
             <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4">
               <p className="text-sm font-medium text-amber-800 mb-1">⚠️ Important:</p>
-              <p className="text-amber-700">{result.special_instructions}</p>
+              <p className="text-amber-700">{String(result.special_instructions)}</p>
             </div>
           )}
 

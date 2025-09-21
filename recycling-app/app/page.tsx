@@ -72,16 +72,16 @@ export default function Home() {
       // The API returns { success, item: {...}, confidence, ... }
       // But we need just the item data with confidence
       const recyclingResult: RecyclingResult = {
-        item_name: data.item?.name || 'Unknown Item',
-        is_recyclable: data.item?.is_recyclable || false,
+        item_name: String(data.item?.name || 'Unknown Item'),
+        is_recyclable: Boolean(data.item?.is_recyclable),
         bin_color: data.item?.bin_color || 'Black',
-        disposal_method: data.item?.disposal_method || 'Place in regular trash',
-        preparation: data.item?.preparation || '',
-        special_instructions: data.item?.special_instructions,
-        disposal_location: data.item?.disposal_location,
-        disposal_address: data.item?.disposal_address,
-        disposal_phone: data.item?.disposal_phone,
-        confidence: data.confidence || 0.5
+        disposal_method: String(data.item?.disposal_method || 'Place in regular trash'),
+        preparation: String(data.item?.preparation || ''),
+        special_instructions: data.item?.special_instructions ? String(data.item.special_instructions) : undefined,
+        disposal_location: data.item?.disposal_location ? String(data.item.disposal_location) : undefined,
+        disposal_address: data.item?.disposal_address ? String(data.item.disposal_address) : undefined,
+        disposal_phone: data.item?.disposal_phone ? String(data.item.disposal_phone) : undefined,
+        confidence: Number(data.confidence) || 0.5
       };
 
       setResult(recyclingResult);
