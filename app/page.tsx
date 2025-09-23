@@ -9,6 +9,9 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [scanResult, setScanResult] = useState<{
     item: string
+    recyclable: string
+    location: string
+    preparation: string
     instructions: string
   } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -38,6 +41,9 @@ export default function Home() {
             setIsScanned(true)
             setScanResult({
               item: data.item || "Unknown Item",
+              recyclable: data.recyclable || "Unknown",
+              location: data.location || "Check with local authorities",
+              preparation: data.preparation || "None specified",
               instructions: data.instructions || "Please check with local recycling center"
             })
           } else {
@@ -46,6 +52,9 @@ export default function Home() {
             setIsScanned(true)
             setScanResult({
               item: "Unable to analyze",
+              recyclable: "Unknown",
+              location: "Please try again",
+              preparation: "N/A",
               instructions: "Please try again or contact your local recycling center"
             })
           }
@@ -55,6 +64,9 @@ export default function Home() {
           setIsScanned(true)
           setScanResult({
             item: "Analysis failed",
+            recyclable: "Unknown",
+            location: "N/A",
+            preparation: "N/A",
             instructions: "Please check your connection and try again"
           })
         }
@@ -151,12 +163,39 @@ export default function Home() {
               )}
               {!isAnalyzing && scanResult && (
                 <div className="bg-green-50 border-2 border-green-600 rounded-lg p-4">
-                  <p className="text-xl font-bold text-green-800 mb-2">
-                    {scanResult.item}
-                  </p>
-                  <p className="text-gray-700 whitespace-pre-wrap">
-                    {scanResult.instructions}
-                  </p>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-semibold text-gray-600">1. Item:</span>
+                      <p className="text-xl font-bold text-green-800">{scanResult.item}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-sm font-semibold text-gray-600">2. Recyclable:</span>
+                      <p className={`text-lg font-semibold ${
+                        scanResult.recyclable.toLowerCase() === 'yes' ? 'text-green-700' : 'text-orange-700'
+                      }`}>
+                        {scanResult.recyclable}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-sm font-semibold text-gray-600">3. Location:</span>
+                      <p className="text-lg text-gray-800">{scanResult.location}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-sm font-semibold text-gray-600">4. Preparation:</span>
+                      <p className="text-lg text-gray-800">{scanResult.preparation}</p>
+                    </div>
+
+                    {scanResult.instructions.includes('\n\n') && (
+                      <div className="pt-3 mt-3 border-t border-green-300">
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                          {scanResult.instructions.split('\n\n').slice(1).join('\n\n')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

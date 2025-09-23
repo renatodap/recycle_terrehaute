@@ -22,32 +22,39 @@ export async function POST(request: NextRequest) {
     let analysis: string;
 
     if (DEMO_MODE) {
-      // Demo response for testing
-      analysis = `This appears to be organic waste (food item).
+      // Demo response for testing - formatted like real API would respond
+      analysis = `1. Item: Apple
+2. Recyclable: No
+3. Location: Regular trash or home composting
+4. Preparation: None needed
 
-**DEMO MODE RESPONSE**
-
-Organic waste like food items are NOT recyclable through traditional recycling programs.
-
-**Disposal Options:**
-1. **Composting (Best)**: If you have home composting or community composting access
-2. **Regular Trash**: Place in regular household trash
-
-**Note**: Food waste contaminates recyclable materials. Never put food in recycling bins.
-
-For Terre Haute: Check with Vigo County Solid Waste Management (3150 S 3rd St) about composting programs.`;
+Food waste like apples should NEVER go in recycling bins as they contaminate other recyclable materials. Best option is home composting if available, otherwise place in regular trash where it will decompose naturally.`;
     } else {
       analysis = await analyzeImageWithOpenAI(image)
     }
 
-    // Parse the analysis to extract item and instructions
-    // The AI response will be a natural language description
-    const lines = analysis.split('\n').filter(line => line.trim())
-    const itemMatch = analysis.match(/This (?:is|appears to be) (?:a |an )?([^.]+)/i)
-    const item = itemMatch ? itemMatch[1] : 'Unknown Item'
+    // Parse the formatted response
+    let parsedItem = 'Unknown Item'
+    let parsedRecyclable = 'Unknown'
+    let parsedLocation = 'Check with local authorities'
+    let parsedPrep = 'None specified'
+
+    // Try to extract structured data from the response
+    const itemMatch = analysis.match(/1\.\s*Item:\s*(.+?)(?:\n|$)/i)
+    const recyclableMatch = analysis.match(/2\.\s*Recyclable:\s*(.+?)(?:\n|$)/i)
+    const locationMatch = analysis.match(/3\.\s*Location:\s*(.+?)(?:\n|$)/i)
+    const prepMatch = analysis.match(/4\.\s*Preparation:\s*(.+?)(?:\n|$)/i)
+
+    if (itemMatch) parsedItem = itemMatch[1].trim()
+    if (recyclableMatch) parsedRecyclable = recyclableMatch[1].trim()
+    if (locationMatch) parsedLocation = locationMatch[1].trim()
+    if (prepMatch) parsedPrep = prepMatch[1].trim()
 
     return NextResponse.json({
-      item: item,
+      item: parsedItem,
+      recyclable: parsedRecyclable,
+      location: parsedLocation,
+      preparation: parsedPrep,
       instructions: analysis,
       fullAnalysis: analysis,
       demoMode: DEMO_MODE
