@@ -6,9 +6,9 @@ interface OpenRouterMessage {
 }
 
 export async function analyzeImageWithOpenRouter(imageBase64: string): Promise<string> {
-  // Use the Vercel URL in production, localhost in development
-  const siteUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
+  // Use the production URL or localhost in development
+  const siteUrl = process.env.NODE_ENV === 'production'
+    ? 'https://recycle-terrehaute.vercel.app'
     : 'http://localhost:3000'
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -81,9 +81,9 @@ Provide a SHORT response with:
 }
 
 export async function chatWithOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
-  // Use the Vercel URL in production, localhost in development
-  const siteUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
+  // Use the production URL or localhost in development
+  const siteUrl = process.env.NODE_ENV === 'production'
+    ? 'https://recycle-terrehaute.vercel.app'
     : 'http://localhost:3000'
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
