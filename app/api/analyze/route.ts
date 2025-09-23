@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { analyzeImageWithOpenRouter } from '@/lib/openrouter'
+import { analyzeImageWithOpenAI } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
     // Check if API key is configured
-    if (!process.env.OPENROUTER_API_KEY && !process.env.OPENAI_API_KEY) {
-      console.error('No API key configured. Please set OPENROUTER_API_KEY or OPENAI_API_KEY')
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('No API key configured. Please set OPENAI_API_KEY')
       return NextResponse.json(
         { error: 'API key not configured. Please contact administrator.' },
         { status: 503 }
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const analysis = await analyzeImageWithOpenRouter(image)
+    const analysis = await analyzeImageWithOpenAI(image)
 
     // Parse the analysis to extract item and instructions
     // The AI response will be a natural language description
