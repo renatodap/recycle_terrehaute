@@ -22,40 +22,34 @@ export async function POST(request: NextRequest) {
     let analysis: string;
 
     if (DEMO_MODE) {
-      // Demo response for testing - formatted like real API would respond
-      analysis = `1. Item: Apple
-2. Recyclable: No
-3. Location: Regular trash or home composting
-4. Preparation: None needed
-
-Food waste like apples should NEVER go in recycling bins as they contaminate other recyclable materials. Best option is home composting if available, otherwise place in regular trash where it will decompose naturally.`;
+      // Demo response for testing - natural format
+      analysis = `Apple
+No
+This is food waste and should go in your regular trash or compost bin. Never put food in recycling as it contaminates other materials. If you want to compost, check with Vigo County Solid Waste at 3230 E Haythorne Ave about local composting programs.`;
     } else {
       analysis = await analyzeImageWithOpenAI(image)
     }
 
-    // Parse the formatted response
-    let parsedItem = 'Unknown Item'
-    let parsedRecyclable = 'Unknown'
-    let parsedLocation = 'Check with local authorities'
-    let parsedPrep = 'None specified'
+    // Parse the natural response format
+    const lines = analysis.split('\n').map(line => line.trim()).filter(line => line)
 
-    // Try to extract structured data from the response
-    const itemMatch = analysis.match(/1\.\s*Item:\s*(.+?)(?:\n|$)/i)
-    const recyclableMatch = analysis.match(/2\.\s*Recyclable:\s*(.+?)(?:\n|$)/i)
-    const locationMatch = analysis.match(/3\.\s*Location:\s*(.+?)(?:\n|$)/i)
-    const prepMatch = analysis.match(/4\.\s*Preparation:\s*(.+?)(?:\n|$)/i)
+    let parsedItem = lines[0] || 'Unknown Item'
+    let parsedRecyclable = lines[1] || 'Unknown'
+    let instructions = lines.slice(2).join('\n') || 'Please check with local authorities'
 
-    if (itemMatch) parsedItem = itemMatch[1].trim()
-    if (recyclableMatch) parsedRecyclable = recyclableMatch[1].trim()
-    if (locationMatch) parsedLocation = locationMatch[1].trim()
-    if (prepMatch) parsedPrep = prepMatch[1].trim()
+    // Clean up the recyclable status
+    if (parsedRecyclable.toLowerCase().includes('yes')) {
+      parsedRecyclable = 'Yes'
+    } else if (parsedRecyclable.toLowerCase().includes('no')) {
+      parsedRecyclable = 'No'
+    } else if (parsedRecyclable.toLowerCase().includes('special')) {
+      parsedRecyclable = 'Special'
+    }
 
     return NextResponse.json({
       item: parsedItem,
       recyclable: parsedRecyclable,
-      location: parsedLocation,
-      preparation: parsedPrep,
-      instructions: analysis,
+      instructions: instructions,
       fullAnalysis: analysis,
       demoMode: DEMO_MODE
     })

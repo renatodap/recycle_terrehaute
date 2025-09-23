@@ -49,15 +49,20 @@ SPECIAL DISPOSAL:
 • Plastic Bags: NEVER in recycling bins - take to grocery stores
 • Styrofoam: NOT recyclable - regular trash only
 
-RESPONSE FORMAT - Be specific and direct:
-1. Item: [Exact item name]
-2. Recyclable: [Yes/No]
-3. Location: [Specific facility name and address]
-4. Preparation: [Required steps before disposal]
+RESPONSE FORMAT:
+First line: Identify the item clearly (e.g., "Apple" or "Plastic water bottle")
+Second line: State if recyclable: "Yes", "No", or "Special" (for hazardous/electronic)
+Rest: Write clear, simple instructions in 2-3 sentences. Include:
+- WHERE to take it (specific facility name & address)
+- HOW to prepare it (if needed)
+- WHEN (include hours if not standard trash/recycling)
+- Any fees or restrictions
 
-If food/organic waste, say: "Regular trash or home composting"
-If not recyclable, say: "Regular trash collection"
-Always specify if item requires special handling or fees.`
+Be conversational but direct. Example:
+"Take this to Vigo County Solid Waste at 3230 E Haythorne Ave. They accept electronics on Tuesdays and Wednesdays from 9am-3pm. TVs have a $20 fee but other electronics are free."
+
+For regular trash/recycling, keep it simple:
+"Put this in your regular recycling bin. Make sure it's clean and dry first."`
         },
         {
           role: 'user',

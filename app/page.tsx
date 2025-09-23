@@ -10,8 +10,6 @@ export default function Home() {
   const [scanResult, setScanResult] = useState<{
     item: string
     recyclable: string
-    location: string
-    preparation: string
     instructions: string
   } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -42,8 +40,6 @@ export default function Home() {
             setScanResult({
               item: data.item || "Unknown Item",
               recyclable: data.recyclable || "Unknown",
-              location: data.location || "Check with local authorities",
-              preparation: data.preparation || "None specified",
               instructions: data.instructions || "Please check with local recycling center"
             })
           } else {
@@ -53,8 +49,6 @@ export default function Home() {
             setScanResult({
               item: "Unable to analyze",
               recyclable: "Unknown",
-              location: "Please try again",
-              preparation: "N/A",
               instructions: "Please try again or contact your local recycling center"
             })
           }
@@ -65,8 +59,6 @@ export default function Home() {
           setScanResult({
             item: "Analysis failed",
             recyclable: "Unknown",
-            location: "N/A",
-            preparation: "N/A",
             instructions: "Please check your connection and try again"
           })
         }
@@ -153,48 +145,43 @@ export default function Home() {
               )}
               {isAnalyzing && (
                 <div className="bg-blue-50 border-2 border-blue-600 rounded-lg p-4">
-                  <p className="text-xl font-bold text-blue-800">
-                    Analyzing image...
-                  </p>
-                  <p className="text-gray-700">
-                    Please wait while we identify your item
-                  </p>
+                  <div className="flex items-center space-x-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <div>
+                      <p className="text-xl font-bold text-blue-800">
+                        Processing your image...
+                      </p>
+                      <p className="text-gray-700">
+                        Identifying item and finding disposal instructions
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
               {!isAnalyzing && scanResult && (
-                <div className="bg-green-50 border-2 border-green-600 rounded-lg p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm font-semibold text-gray-600">1. Item:</span>
-                      <p className="text-xl font-bold text-green-800">{scanResult.item}</p>
+                <div className="space-y-4">
+                  {/* Item Identification */}
+                  <div className="bg-white border-2 border-gray-300 rounded-lg p-4">
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">
+                      {scanResult.item}
+                    </h3>
+                    <div className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                      scanResult.recyclable?.toLowerCase() === 'yes'
+                        ? 'bg-green-100 text-green-800'
+                        : scanResult.recyclable?.toLowerCase() === 'no'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {scanResult.recyclable === 'Yes' ? '♻️ Recyclable' :
+                       scanResult.recyclable === 'No' ? '🗑️ Not Recyclable' :
+                       '⚠️ Special Disposal'}
                     </div>
+                  </div>
 
-                    <div>
-                      <span className="text-sm font-semibold text-gray-600">2. Recyclable:</span>
-                      <p className={`text-lg font-semibold ${
-                        scanResult.recyclable.toLowerCase() === 'yes' ? 'text-green-700' : 'text-orange-700'
-                      }`}>
-                        {scanResult.recyclable}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className="text-sm font-semibold text-gray-600">3. Location:</span>
-                      <p className="text-lg text-gray-800">{scanResult.location}</p>
-                    </div>
-
-                    <div>
-                      <span className="text-sm font-semibold text-gray-600">4. Preparation:</span>
-                      <p className="text-lg text-gray-800">{scanResult.preparation}</p>
-                    </div>
-
-                    {scanResult.instructions.includes('\n\n') && (
-                      <div className="pt-3 mt-3 border-t border-green-300">
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                          {scanResult.instructions.split('\n\n').slice(1).join('\n\n')}
-                        </p>
-                      </div>
-                    )}
+                  {/* Disposal Instructions */}
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-900 mb-2">What to do:</h4>
+                    <p className="text-gray-800 whitespace-pre-wrap">{scanResult.instructions}</p>
                   </div>
                 </div>
               )}
