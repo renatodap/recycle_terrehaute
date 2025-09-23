@@ -37,19 +37,19 @@ export default function LocationsPage() {
   }, [])
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="bg-white border-b-2 border-gray-300 p-4">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Recycle className="text-green-600" size={24} />
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Fixed Header */}
+      <header className="bg-white border-b-2 border-gray-300 p-3 flex-shrink-0 z-10">
+        <h1 className="text-lg font-bold flex items-center gap-2 text-black">
+          <Recycle className="text-green-600" size={20} />
           Recycle Terre Haute
         </h1>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <MapPin className="text-green-600" size={20} />
+      {/* Main Content - Scrollable */}
+      <main className="flex-1 p-3 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <h2 className="text-base font-bold mb-3 flex items-center gap-2 text-black">
+          <MapPin className="text-green-600" size={18} />
           Recycling Locations
         </h2>
 
@@ -58,48 +58,39 @@ export default function LocationsPage() {
             Loading locations...
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {locations.map((location, index) => (
               <div
                 key={location.id}
-                className="border-2 border-gray-300 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+                className="border border-gray-300 rounded-lg p-3 bg-white"
               >
-                {/* Location Number Badge */}
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-bold text-lg text-gray-800">
+                {/* Location Header */}
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-bold text-sm text-black pr-2">
                     {location.name}
                   </h3>
-                  <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0">
                     #{index + 1}
                   </span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {/* Address */}
                   <div className="flex items-start gap-2">
-                    <MapPin className="text-gray-400 mt-0.5" size={16} />
-                    <div>
-                      <p className="text-xs text-gray-500 font-semibold">Address</p>
-                      <p className="text-sm text-gray-700">{location.address || 'No address available'}</p>
-                    </div>
+                    <MapPin className="text-green-600 mt-0.5 flex-shrink-0" size={14} />
+                    <p className="text-xs text-gray-700">{location.address || 'No address available'}</p>
                   </div>
 
                   {/* Accepts */}
                   <div className="flex items-start gap-2">
-                    <Package className="text-gray-400 mt-0.5" size={16} />
-                    <div>
-                      <p className="text-xs text-gray-500 font-semibold">Accepts</p>
-                      <p className="text-sm text-gray-700">{location.accepts || 'Contact for details'}</p>
-                    </div>
+                    <Package className="text-green-600 mt-0.5 flex-shrink-0" size={14} />
+                    <p className="text-xs text-gray-700">{location.accepts || 'Contact for details'}</p>
                   </div>
 
                   {/* Hours */}
                   <div className="flex items-start gap-2">
-                    <Clock className="text-gray-400 mt-0.5" size={16} />
-                    <div>
-                      <p className="text-xs text-gray-500 font-semibold">Hours</p>
-                      <p className="text-sm text-gray-700">{location.hours || 'Check website for hours'}</p>
-                    </div>
+                    <Clock className="text-green-600 mt-0.5 flex-shrink-0" size={14} />
+                    <p className="text-xs text-gray-700">{location.hours || 'Check website for hours'}</p>
                   </div>
                 </div>
               </div>
