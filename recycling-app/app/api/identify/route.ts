@@ -104,40 +104,24 @@ export async function POST(request: NextRequest) {
       value: 'value' in label ? label.value : (label as any).score || 0
     }));
 
-    // Step 2: Use AI to interpret the results for recycling
+    // Step 2: Use OpenRouter for interpretation (highest efficiency)
     let interpretation;
-    let aiService = 'rules'; // Track which service we used
+    let aiService = 'openrouter';
 
     try {
-      // Try OpenRouter first
+      // ALWAYS use OpenRouter for maximum efficiency
       if (isOpenRouterConfigured()) {
         interpretation = await interpretWithOpenRouter(normalizedLabels);
         aiService = 'openrouter';
-      }
-      // Try OpenAI if available
-      else if (process.env.OPENAI_API_KEY) {
-        interpretation = await interpretWithOpenAI(
-          normalizedLabels,
-          process.env.OPENAI_API_KEY
-        );
-        aiService = 'openai';
-      }
-      // Try Clarifai LLM if available
-      else if (process.env.CLARIFAI_PAT) {
-        interpretation = await interpretWithClarifai(
-          normalizedLabels,
-          process.env.CLARIFAI_PAT
-        );
-        aiService = 'clarifai-llm';
-      }
-      // Fallback to rule-based interpretation
-      else {
+      } else {
+        // If OpenRouter not configured, use rule-based interpretation
+        console.warn('OpenRouter not configured. Using rule-based interpretation.');
         interpretation = interpretWithRules(normalizedLabels);
         aiService = 'rules';
       }
     } catch (aiError) {
-      console.error('AI interpretation failed, using rules:', aiError);
-      // Fallback to rule-based if AI fails
+      console.error('OpenRouter interpretation failed, using rules:', aiError);
+      // Fallback to rule-based if OpenRouter fails
       interpretation = interpretWithRules(normalizedLabels);
       aiService = 'rules-fallback';
     }
