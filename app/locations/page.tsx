@@ -24,7 +24,9 @@ export default function LocationsPage() {
             id: idx + 1,
             name: loc.name || 'Location ' + (idx + 1),
             address: loc.address || '',
-            accepts: loc.accepts ? loc.accepts.join(', ') : '',
+            accepts: loc.accepts ? loc.accepts.map((item: string) =>
+              item.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+            ).join(', ') : '',
             hours: loc.hours || ''
           })))
         }
