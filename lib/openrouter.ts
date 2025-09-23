@@ -6,12 +6,17 @@ interface OpenRouterMessage {
 }
 
 export async function analyzeImageWithOpenRouter(imageBase64: string): Promise<string> {
+  // Use the Vercel URL in production, localhost in development
+  const siteUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:3000'
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'http://localhost:3004',
+      'HTTP-Referer': siteUrl,
       'X-Title': 'RecycleIt Terre Haute'
     },
     body: JSON.stringify({
@@ -76,12 +81,17 @@ Provide a SHORT response with:
 }
 
 export async function chatWithOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
+  // Use the Vercel URL in production, localhost in development
+  const siteUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:3000'
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'http://localhost:3004',
+      'HTTP-Referer': siteUrl,
       'X-Title': 'RecycleIt Terre Haute'
     },
     body: JSON.stringify({
