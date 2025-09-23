@@ -1,4 +1,4 @@
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
 
 interface OpenRouterMessage {
   role: 'user' | 'assistant' | 'system'
