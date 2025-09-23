@@ -1,18 +1,20 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { MapPin, Recycle, Clock, Package } from 'lucide-react'
+import { MapPin, Recycle, Clock, Package, Search } from 'lucide-react'
 
 interface Location {
   id: number
   name: string
   address: string
   accepts: string
+  acceptsArray: string[]
   hours: string
 }
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     // Fetch real locations data
@@ -20,15 +22,19 @@ export default function LocationsPage() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setLocations(data.map((loc: any, idx: number) => ({
-            id: idx + 1,
-            name: loc.name || 'Location ' + (idx + 1),
-            address: loc.address || '',
-            accepts: loc.accepts ? loc.accepts.map((item: string) =>
+          setLocations(data.map((loc: any, idx: number) => {
+            const formattedAccepts = loc.accepts ? loc.accepts.map((item: string) =>
               item.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
-            ).join(', ') : '',
-            hours: loc.hours || ''
-          })))
+            ) : []
+            return {
+              id: idx + 1,
+              name: loc.name || 'Location ' + (idx + 1),
+              address: loc.address || '',
+              accepts: formattedAccepts.join(', '),
+              acceptsArray: formattedAccepts,
+              hours: loc.hours || ''
+            }
+          }))
         }
         setLoading(false)
       })
@@ -37,6 +43,24 @@ export default function LocationsPage() {
         setLoading(false)
       })
   }, [])
+
+  const filteredLocations = searchQuery.trim()
+    ? locations.filter(loc =>
+        loc.acceptsArray.some(item =>
+          item.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || loc.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : locations
+
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim()) return text
+    const parts = text.split(new RegExp(`(${query})`, 'gi'))
+    return parts.map((part, i) =>
+      part.toLowerCase() === query.toLowerCase()
+        ? `**${part}**`
+        : part
+    ).join('')
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -55,13 +79,30 @@ export default function LocationsPage() {
           Recycling Locations
         </h2>
 
+        {/* Search Bar */}
+        <div className="mb-3 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by material (e.g., batteries, glass)..."
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+
         {loading ? (
           <div className="text-center py-8 text-gray-500">
             Loading locations...
           </div>
+        ) : filteredLocations.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>No locations found for "{searchQuery}"</p>
+            <p className="text-sm mt-2">Try searching for: batteries, glass, electronics, plastic, etc.</p>
+          </div>
         ) : (
           <div className="space-y-3">
-            {locations.map((location, index) => (
+            {filteredLocations.map((location, index) => (
               <div
                 key={location.id}
                 className="border border-gray-300 rounded-lg p-3 bg-white"
@@ -86,7 +127,22 @@ export default function LocationsPage() {
                   {/* Accepts */}
                   <div className="flex items-start gap-2">
                     <Package className="text-green-600 mt-0.5 flex-shrink-0" size={14} />
-                    <p className="text-xs text-gray-700">{location.accepts || 'Contact for details'}</p>
+                    <p className="text-xs text-gray-700">
+                      {searchQuery.trim() ? (
+                        location.acceptsArray.map((item, i) => (
+                          <span key={i}>
+                            {i > 0 && ', '}
+                            {item.toLowerCase().includes(searchQuery.toLowerCase()) ? (
+                              <span className="bg-yellow-200 font-semibold">{item}</span>
+                            ) : (
+                              item
+                            )}
+                          </span>
+                        ))
+                      ) : (
+                        location.accepts || 'Contact for details'
+                      )}
+                    </p>
                   </div>
 
                   {/* Hours */}
