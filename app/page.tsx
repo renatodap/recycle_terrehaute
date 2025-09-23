@@ -17,11 +17,14 @@ export default function Home() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Immediately show we're processing
+      setIsAnalyzing(true)
+      setIsScanned(true)
+
       const reader = new FileReader()
       reader.onloadend = async () => {
         const imageBase64 = reader.result as string
         setSelectedImage(imageBase64)
-        setIsAnalyzing(true)
 
         // Call AI analysis API
         try {

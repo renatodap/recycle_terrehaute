@@ -19,6 +19,7 @@ export default function ChatPage() {
     }
   ])
   const [inputText, setInputText] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
 
   const presetMessages = [
     "Where can I recycle plastic bottles?",
@@ -39,6 +40,7 @@ export default function ChatPage() {
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
     setInputText('')
+    setIsTyping(true)
 
     // Call chat API
     try {
@@ -57,6 +59,7 @@ export default function ChatPage() {
 
       if (response.ok) {
         const data = await response.json()
+        setIsTyping(false)
         const botMessage: Message = {
           id: Date.now() + 1,
           text: data.message,
@@ -65,6 +68,7 @@ export default function ChatPage() {
         }
         setMessages(prev => [...prev, botMessage])
       } else {
+        setIsTyping(false)
         const botMessage: Message = {
           id: Date.now() + 1,
           text: "Sorry, I'm having trouble responding right now. Please try again.",
@@ -75,6 +79,7 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error('Error sending message:', error)
+      setIsTyping(false)
       const botMessage: Message = {
         id: Date.now() + 1,
         text: "Sorry, I couldn't connect to the server. Please check your connection.",
@@ -138,6 +143,19 @@ export default function ChatPage() {
               </div>
             </div>
           ))}
+
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-white text-gray-800 border border-gray-300 px-4 py-3 rounded-lg">
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

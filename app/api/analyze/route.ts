@@ -25,7 +25,15 @@ export async function POST(request: NextRequest) {
       // Demo response for testing - natural format
       analysis = `Apple
 No
-This is food waste and should go in your regular trash or compost bin. Never put food in recycling as it contaminates other materials. If you want to compost, check with Vigo County Solid Waste at 3230 E Haythorne Ave about local composting programs.`;
+**WHERE TO TAKE IT:**
+• Regular trash bin or home compost
+
+**HOW TO PREPARE:**
+• No preparation needed
+
+**IMPORTANT:**
+• Never put food in recycling - it contaminates other materials
+• For composting programs, check with Vigo County Solid Waste at 3230 E Haythorne Ave`;
     } else {
       analysis = await analyzeImageWithOpenAI(image)
     }
