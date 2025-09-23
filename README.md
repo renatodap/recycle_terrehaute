@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -34,3 +35,38 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+=======
+# Terre Haute Recycling Assistant
+
+## AI-Powered Recycling Guide for Terre Haute, Indiana
+
+This web application helps Terre Haute residents identify recyclable items using AI-powered image recognition through Google Vision API.
+
+### Features
+- 📸 Take photos or upload images of items
+- 🤖 AI-powered item identification
+- ♻️ Detailed recycling instructions
+- 📍 Local drop-off locations
+- 📅 Pickup schedules
+
+### Deployment
+
+This app is deployed on Vercel. The app is located in the `recycling-app` directory.
+
+### Environment Variables
+
+Required for production:
+- `GOOGLE_VISION_API_KEY` - Your Google Cloud Vision API key
+
+### Local Development
+
+```bash
+cd recycling-app
+npm install
+npm run dev
+```
+
+### Build Status
+
+✅ Ready for deployment
+>>>>>>> 2154acc40e9b6de380bf657bae9543aa4986b4a6
