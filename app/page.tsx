@@ -113,17 +113,17 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="bg-white border-b-2 border-gray-300 p-3">
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Fixed Header */}
+      <header className="bg-white border-b-2 border-gray-300 p-3 flex-shrink-0 z-10">
         <h1 className="text-lg font-bold flex items-center gap-2 text-black">
           <Recycle className="text-green-600" size={20} />
           Recycle Terre Haute
         </h1>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 p-3 flex flex-col overflow-y-auto">
+      {/* Main Content - Scrollable */}
+      <main className="flex-1 p-3 flex flex-col overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         {!isScanned ? (
           // Before Scan State
           <div className="flex-1 flex flex-col justify-center">
