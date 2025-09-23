@@ -1,37 +1,33 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, Upload, HelpCircle, List } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Camera, Upload } from 'lucide-react';
 import AnalyzingScreen from '@/components/AnalyzingScreen';
 import ResultsScreen from '@/components/ResultsScreen';
-import ErrorBoundary from '@/components/ErrorBoundary';
 import { RecyclingResult } from '@/types/recycling';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<RecyclingResult | null>(null);
-  const [dragActive, setDragActive] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
-  const handleDrag = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleFile(files[0]);
     }
   };
 
@@ -49,7 +45,6 @@ export default function Home() {
 
     setIsAnalyzing(true);
 
-    // Convert file to base64
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64String = reader.result as string;
@@ -57,56 +52,33 @@ export default function Home() {
       try {
         const response = await fetch('/api/identify', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image: base64String
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64String }),
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to analyze image');
-        }
+        if (!response.ok) throw new Error('Failed to analyze image');
 
         const data = await response.json();
-        console.log('API Response:', data);
-
-        // Check if the API returned an error
-        if (!data.success) {
-          console.error('API returned error:', data);
+        if (!data.success || !data.item) {
           throw new Error(data.error || 'Failed to analyze image');
         }
 
-        // Check if we have the expected data structure
-        if (!data.item) {
-          console.error('Invalid API response - missing item field:', data);
-          throw new Error('Invalid response from server');
-        }
-
-        // Log the item data for debugging
-        console.log('Item data from API:', data.item);
-
-        // Extract the recycling result from the API response
-        // The API returns { success, item: {...}, confidence, ... }
-        // But we need just the item data with confidence
         const recyclingResult: RecyclingResult = {
           item_name: String(data.item?.name || 'Unknown Item'),
           is_recyclable: Boolean(data.item?.is_recyclable),
           bin_color: (data.item?.bin_color as 'Blue' | 'Green' | 'Black' | 'Special') || 'Black',
           disposal_method: String(data.item?.disposal_method || 'Place in regular trash'),
           preparation: String(data.item?.preparation || ''),
-          special_instructions: data.item?.special_instructions ? String(data.item.special_instructions) : undefined,
-          disposal_location: data.item?.disposal_location ? String(data.item.disposal_location) : undefined,
-          disposal_address: data.item?.disposal_address ? String(data.item.disposal_address) : undefined,
-          disposal_phone: data.item?.disposal_phone ? String(data.item.disposal_phone) : undefined,
+          special_instructions: data.item?.special_instructions,
+          disposal_location: data.item?.disposal_location,
+          disposal_address: data.item?.disposal_address,
+          disposal_phone: data.item?.disposal_phone,
           confidence: Number(data.confidence) || 0.5
         };
 
-        console.log('Processed result:', recyclingResult);
         setResult(recyclingResult);
       } catch (error) {
-        console.error('Error analyzing image:', error);
+        console.error('Error:', error);
         alert('Failed to analyze image. Please try again.');
       } finally {
         setIsAnalyzing(false);
@@ -121,118 +93,103 @@ export default function Home() {
     setIsAnalyzing(false);
   };
 
-  if (isAnalyzing) {
-    return (
-      <ErrorBoundary>
-        <AnalyzingScreen />
-      </ErrorBoundary>
-    );
-  }
-
-  if (result) {
-    return (
-      <ErrorBoundary>
-        <ResultsScreen result={result} onReset={resetApp} />
-      </ErrorBoundary>
-    );
-  }
+  if (isAnalyzing) return <AnalyzingScreen />;
+  if (result) return <ResultsScreen result={result} onReset={resetApp} />;
 
   return (
-    <ErrorBoundary>
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-white">
-      {/* Header */}
-      <header className="px-4 py-6">
-        <div className="max-w-md mx-auto text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            RecycleIt! Terre Haute
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      <div className="container mx-auto px-4 py-12 max-w-2xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-green-600 mb-3">
+            RecycleIt!
           </h1>
-          <p className="text-gray-600 text-sm">
-            What should I do with...
+          <p className="text-gray-600">
+            Snap a photo to find out how to recycle any item
           </p>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="flex-1 px-4 pb-20">
-        <div className="max-w-md mx-auto space-y-6">
-          {/* Camera Button - Primary Action */}
-          <div
-            className={`relative ${dragActive ? 'scale-105' : ''} transition-transform`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full aspect-square max-w-xs mx-auto flex flex-col items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-3xl shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-95"
-            >
-              <Camera className="w-20 h-20 text-white mb-4" />
-              <span className="text-white text-xl font-semibold">Snap Photo</span>
-              <span className="text-green-100 text-sm mt-2">Tap to identify</span>
-            </button>
+        {/* Upload Area */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`
+            relative bg-white rounded-3xl p-12 cursor-pointer
+            border-3 border-dashed transition-all
+            ${isDragging
+              ? 'border-green-400 bg-green-50 scale-105'
+              : 'border-gray-300 hover:border-green-400 hover:bg-gray-50'}
+          `}
+        >
+          <div className="text-center">
+            <Camera className={`w-20 h-20 mx-auto mb-4 ${isDragging ? 'text-green-500' : 'text-gray-400'}`} />
 
-            {dragActive && (
-              <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 rounded-3xl">
-                <p className="text-white text-lg font-semibold">Drop image here</p>
-              </div>
-            )}
-          </div>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              {isDragging ? 'Drop your image here!' : 'Click or drag an image'}
+            </h2>
 
-          {/* Secondary Actions */}
-          <div className="text-center space-y-3">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-2 bg-gradient-to-br from-green-50 to-white text-gray-500">or</span>
-              </div>
+            <p className="text-sm text-gray-500 mb-6">
+              JPG, PNG, or HEIF • Max 10MB
+            </p>
+
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="px-6 py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <Camera className="w-5 h-5" />
+                Take Photo
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="px-6 py-3 bg-white border-2 border-green-600 text-green-600 rounded-full font-medium hover:bg-green-50 transition-colors flex items-center gap-2"
+              >
+                <Upload className="w-5 h-5" />
+                Browse Files
+              </button>
             </div>
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-gray-200 rounded-2xl hover:border-green-500 hover:shadow-lg transition-all"
-            >
-              <Upload className="w-5 h-5 text-gray-600" />
-              <span className="text-gray-700 font-medium">Upload from Gallery</span>
-            </button>
-          </div>
-
-          {/* Hidden File Input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </div>
-      </main>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div className="max-w-md mx-auto px-4 py-2">
-          <div className="flex justify-around">
-            <button
-              onClick={() => router.push('/help')}
-              className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-green-600 transition-colors"
-            >
-              <HelpCircle className="w-6 h-6 mb-1" />
-              <span className="text-xs">Help</span>
-            </button>
-
-            <button
-              onClick={() => router.push('/faq')}
-              className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-green-600 transition-colors"
-            >
-              <List className="w-6 h-6 mb-1" />
-              <span className="text-xs">FAQ</span>
-            </button>
           </div>
         </div>
-      </nav>
+
+        {/* Quick Tips */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-6 rounded-2xl">
+            <div className="text-3xl mb-3">♻️</div>
+            <h3 className="font-semibold text-gray-800 mb-1">Blue Bin</h3>
+            <p className="text-sm text-gray-600">Paper, plastic, metal, glass</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl">
+            <div className="text-3xl mb-3">🌱</div>
+            <h3 className="font-semibold text-gray-800 mb-1">Green Bin</h3>
+            <p className="text-sm text-gray-600">Food waste, yard waste</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl">
+            <div className="text-3xl mb-3">🗑️</div>
+            <h3 className="font-semibold text-gray-800 mb-1">Black Bin</h3>
+            <p className="text-sm text-gray-600">Non-recyclable waste</p>
+          </div>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+          capture="environment"
+        />
+      </div>
     </div>
-    </ErrorBoundary>
   );
 }

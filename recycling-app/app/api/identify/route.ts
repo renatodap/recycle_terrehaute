@@ -4,6 +4,7 @@ import { analyzeImageWithVision } from '@/lib/vision-service';
 import { analyzeImageWithOpenAI, isOpenAIVisionConfigured } from '@/lib/openai-vision-service';
 import { analyzeImageWithClarifai } from '@/lib/clarifai-service';
 import { interpretWithOpenAI, interpretWithClarifai, interpretWithRules } from '@/lib/ai-interpreter';
+import { analyzeImageWithOpenRouter, interpretWithOpenRouter, isOpenRouterConfigured } from '@/lib/openrouter-service';
 
 // Main identify endpoint - Google Vision API primary, Clarifai fallback
 export async function POST(request: NextRequest) {
@@ -25,8 +26,18 @@ export async function POST(request: NextRequest) {
     let visionService = 'none';
 
     try {
-      // Try OpenAI Vision first (best for general object recognition)
-      if (isOpenAIVisionConfigured()) {
+      // Try OpenRouter first (using GPT-4 Vision)
+      if (isOpenRouterConfigured()) {
+        console.log('Attempting OpenRouter Vision API...');
+        visionResult = await analyzeImageWithOpenRouter(image);
+        if (!visionResult.error && visionResult.labels.length > 0) {
+          visionService = 'openrouter-vision';
+        } else {
+          throw new Error(visionResult.error || 'OpenRouter Vision returned no results');
+        }
+      }
+      // Try OpenAI Vision (if configured separately)
+      else if (isOpenAIVisionConfigured()) {
         console.log('Attempting OpenAI Vision API...');
         visionResult = await analyzeImageWithOpenAI(image);
         if (!visionResult.error && visionResult.labels.length > 0) {
@@ -98,8 +109,13 @@ export async function POST(request: NextRequest) {
     let aiService = 'rules'; // Track which service we used
 
     try {
-      // Try OpenAI first if available
-      if (process.env.OPENAI_API_KEY) {
+      // Try OpenRouter first
+      if (isOpenRouterConfigured()) {
+        interpretation = await interpretWithOpenRouter(normalizedLabels);
+        aiService = 'openrouter';
+      }
+      // Try OpenAI if available
+      else if (process.env.OPENAI_API_KEY) {
         interpretation = await interpretWithOpenAI(
           normalizedLabels,
           process.env.OPENAI_API_KEY
