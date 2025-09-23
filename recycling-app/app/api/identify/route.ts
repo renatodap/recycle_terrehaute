@@ -3,11 +3,11 @@ import { analyzeImageWithGoogleVision, isGoogleVisionConfigured } from '@/lib/go
 import { analyzeImageWithVision } from '@/lib/vision-service';
 import { analyzeImageWithOpenAI, isOpenAIVisionConfigured } from '@/lib/openai-vision-service';
 import { analyzeImageWithClarifai } from '@/lib/clarifai-service';
-import { interpretWithOpenAI, interpretWithClarifai, interpretWithRules } from '@/lib/ai-interpreter';
+import { interpretWithRules } from '@/lib/ai-interpreter';
 import { analyzeImageWithOpenRouter, interpretWithOpenRouter, isOpenRouterConfigured } from '@/lib/openrouter-service';
 
 // Main identify endpoint - Google Vision API primary, Clarifai fallback
-export async function POST(request: NextRequest) {
+export async function POST() {
   const startTime = Date.now();
 
   try {

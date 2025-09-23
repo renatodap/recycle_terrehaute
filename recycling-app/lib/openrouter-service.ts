@@ -163,14 +163,22 @@ export function isOpenRouterConfigured(): boolean {
 }
 
 // Fallback rule-based interpretation
-function interpretWithRules(labels: Array<{ name: string; value: number }>): any {
+function interpretWithRules(labels: Array<{ name: string; value: number }>): {
+  item_name: string;
+  is_recyclable: boolean;
+  bin_color: 'Blue' | 'Green' | 'Black' | 'Special';
+  disposal_method: string;
+  preparation?: string;
+  special_instructions?: string;
+  confidence: number;
+} {
   const labelText = labels.map(l => l.name.toLowerCase()).join(' ');
 
   // Default response
   let result = {
     item_name: labels[0]?.name || 'Unknown Item',
     is_recyclable: false,
-    bin_color: 'Black' as const,
+    bin_color: 'Black',
     disposal_method: 'Place in regular trash bin',
     preparation: 'No special preparation needed',
     confidence: 0.5
@@ -181,7 +189,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): any
     result = {
       item_name: 'Plastic Bottle',
       is_recyclable: true,
-      bin_color: 'Blue' as const,
+      bin_color: 'Blue',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Rinse clean, remove cap, and crush if possible',
       confidence: 0.8
@@ -190,7 +198,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): any
     result = {
       item_name: 'Paper/Cardboard',
       is_recyclable: true,
-      bin_color: 'Blue' as const,
+      bin_color: 'Blue',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Keep dry, flatten boxes, remove tape and staples',
       confidence: 0.8
@@ -199,7 +207,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): any
     result = {
       item_name: 'Glass Container',
       is_recyclable: true,
-      bin_color: 'Blue' as const,
+      bin_color: 'Blue',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Rinse clean, remove lids',
       confidence: 0.8
@@ -208,7 +216,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): any
     result = {
       item_name: 'Metal Can',
       is_recyclable: true,
-      bin_color: 'Blue' as const,
+      bin_color: 'Blue',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Rinse clean, labels can stay on',
       confidence: 0.8
@@ -217,7 +225,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): any
     result = {
       item_name: 'Food Waste',
       is_recyclable: false,
-      bin_color: 'Green' as const,
+      bin_color: 'Green',
       disposal_method: 'Compost if available, otherwise regular trash',
       preparation: 'Remove any packaging',
       confidence: 0.7
@@ -226,7 +234,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): any
     result = {
       item_name: 'Electronic Waste',
       is_recyclable: false,
-      bin_color: 'Special' as const,
+      bin_color: 'Special',
       disposal_method: 'Take to e-waste recycling center',
       preparation: 'Remove batteries if possible',
       special_instructions: 'Do not put in regular trash',
