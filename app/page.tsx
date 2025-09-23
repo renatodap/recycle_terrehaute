@@ -14,19 +14,19 @@ function formatInstructions(text: string) {
     if (trimmed.startsWith('**') && trimmed.endsWith(':**')) {
       const heading = trimmed.replace(/\*\*/g, '').replace(':', '')
       formatted.push(
-        <h4 key={idx} className="font-bold text-gray-900 mt-3 mb-1">
+        <h4 key={idx} className="font-bold text-gray-900 mt-2 mb-1 text-sm">
           {heading}
         </h4>
       )
     } else if (trimmed.startsWith('•')) {
       formatted.push(
-        <li key={idx} className="ml-4 text-gray-700">
+        <li key={idx} className="ml-4 text-gray-700 text-sm">
           {trimmed.substring(1).trim()}
         </li>
       )
     } else {
       formatted.push(
-        <p key={idx} className="text-gray-700">
+        <p key={idx} className="text-gray-700 text-sm">
           {trimmed}
         </p>
       )
@@ -115,20 +115,20 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <header className="bg-white border-b-2 border-gray-300 p-4">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Recycle className="text-green-600" size={24} />
+      <header className="bg-white border-b-2 border-gray-300 p-3">
+        <h1 className="text-lg font-bold flex items-center gap-2">
+          <Recycle className="text-green-600" size={20} />
           Recycle Terre Haute
         </h1>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 flex flex-col">
+      <main className="flex-1 p-3 flex flex-col overflow-y-auto">
         {!isScanned ? (
           // Before Scan State
           <div className="flex-1 flex flex-col justify-center">
             <div
-              className="border-4 border-dashed border-gray-400 rounded-lg h-64 flex flex-col items-center justify-center bg-gray-100 cursor-pointer"
+              className="border-4 border-dashed border-gray-400 rounded-lg h-48 flex flex-col items-center justify-center bg-gray-100 cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               {selectedImage ? (
@@ -142,8 +142,8 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <Camera size={64} className="text-gray-400 mb-4" />
-                  <p className="text-gray-500">Tap to upload image</p>
+                  <Camera size={48} className="text-gray-400 mb-3" />
+                  <p className="text-gray-500 text-sm">Tap to upload image</p>
                 </>
               )}
             </div>
@@ -158,7 +158,7 @@ export default function Home() {
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="mt-8 bg-green-600 text-white py-4 px-8 rounded-lg text-lg font-semibold flex items-center justify-center gap-2 hover:bg-green-700"
+              className="mt-4 bg-green-600 text-white py-3 px-6 rounded-lg text-base font-semibold flex items-center justify-center gap-2 hover:bg-green-700"
             >
               <Camera size={24} />
               Scan Item
@@ -167,10 +167,10 @@ export default function Home() {
         ) : (
           // After Scan State
           <div className="flex-1 flex flex-col">
-            <div className="border-2 border-gray-300 rounded-lg p-4 bg-white mb-4">
-              <h2 className="text-lg font-bold mb-2">Scanned Item</h2>
+            <div className="border-2 border-gray-300 rounded-lg p-3 bg-white mb-3">
+              <h2 className="text-base font-bold mb-2">Scanned Item</h2>
               {selectedImage && (
-                <div className="relative h-48 mb-4">
+                <div className="relative h-32 mb-3">
                   <Image
                     src={selectedImage}
                     alt="Scanned item"
@@ -180,14 +180,14 @@ export default function Home() {
                 </div>
               )}
               {isAnalyzing && (
-                <div className="bg-blue-50 border-2 border-blue-600 rounded-lg p-4">
+                <div className="bg-blue-50 border-2 border-blue-600 rounded-lg p-3">
                   <div className="flex items-center space-x-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                     <div>
-                      <p className="text-xl font-bold text-blue-800">
+                      <p className="text-base font-bold text-blue-800">
                         Processing your image...
                       </p>
-                      <p className="text-gray-700">
+                      <p className="text-gray-700 text-sm">
                         Identifying item and finding disposal instructions
                       </p>
                     </div>
@@ -195,10 +195,10 @@ export default function Home() {
                 </div>
               )}
               {!isAnalyzing && scanResult && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {/* Item Identification */}
-                  <div className="bg-white border-2 border-gray-300 rounded-lg p-4">
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">
+                  <div className="bg-white border-2 border-gray-300 rounded-lg p-3">
+                    <h3 className="text-base font-bold text-gray-800 mb-2">
                       {scanResult.item}
                     </h3>
                     <div className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
@@ -215,8 +215,8 @@ export default function Home() {
                   </div>
 
                   {/* Disposal Instructions */}
-                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 mb-3">What to do:</h4>
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
+                    <h4 className="font-semibold text-blue-900 mb-2 text-sm">What to do:</h4>
                     {formatInstructions(scanResult.instructions)}
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export default function Home() {
 
             <button
               onClick={handleNewScan}
-              className="bg-blue-600 text-white py-4 px-8 rounded-lg text-lg font-semibold hover:bg-blue-700"
+              className="bg-blue-600 text-white py-3 px-6 rounded-lg text-base font-semibold hover:bg-blue-700"
             >
               Scan New Item
             </button>
