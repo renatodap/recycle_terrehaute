@@ -9,6 +9,39 @@ interface Message {
   timestamp: Date
 }
 
+function formatMessage(text: string) {
+  const lines = text.split('\n')
+  const formatted: JSX.Element[] = []
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim()
+    if (!trimmed) return
+
+    if (trimmed.startsWith('**') && trimmed.endsWith(':**')) {
+      const heading = trimmed.replace(/\*\*/g, '').replace(':', '')
+      formatted.push(
+        <h4 key={idx} className="font-bold text-gray-900 mt-2 mb-1">
+          {heading}
+        </h4>
+      )
+    } else if (trimmed.startsWith('•')) {
+      formatted.push(
+        <li key={idx} className="ml-4 text-gray-700">
+          {trimmed.substring(1).trim()}
+        </li>
+      )
+    } else {
+      formatted.push(
+        <p key={idx} className="text-gray-700">
+          {trimmed}
+        </p>
+      )
+    }
+  })
+
+  return <div className="space-y-1">{formatted}</div>
+}
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -139,7 +172,7 @@ export default function ChatPage() {
                     : 'bg-white text-gray-800 border border-gray-300'
                 }`}
               >
-                {message.text}
+                {message.isUser ? message.text : formatMessage(message.text)}
               </div>
             </div>
           ))}

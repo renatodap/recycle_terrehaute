@@ -3,6 +3,39 @@ import { useState, useRef } from 'react'
 import { Camera, Recycle } from 'lucide-react'
 import Image from 'next/image'
 
+function formatInstructions(text: string) {
+  const lines = text.split('\n')
+  const formatted: JSX.Element[] = []
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim()
+    if (!trimmed) return
+
+    if (trimmed.startsWith('**') && trimmed.endsWith(':**')) {
+      const heading = trimmed.replace(/\*\*/g, '').replace(':', '')
+      formatted.push(
+        <h4 key={idx} className="font-bold text-gray-900 mt-3 mb-1">
+          {heading}
+        </h4>
+      )
+    } else if (trimmed.startsWith('•')) {
+      formatted.push(
+        <li key={idx} className="ml-4 text-gray-700">
+          {trimmed.substring(1).trim()}
+        </li>
+      )
+    } else {
+      formatted.push(
+        <p key={idx} className="text-gray-700">
+          {trimmed}
+        </p>
+      )
+    }
+  })
+
+  return <div className="space-y-1">{formatted}</div>
+}
+
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [isScanned, setIsScanned] = useState(false)
@@ -17,14 +50,14 @@ export default function Home() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Immediately show we're processing
-      setIsAnalyzing(true)
-      setIsScanned(true)
-
       const reader = new FileReader()
       reader.onloadend = async () => {
         const imageBase64 = reader.result as string
         setSelectedImage(imageBase64)
+
+        // Show processing state after image is loaded
+        setIsAnalyzing(true)
+        setIsScanned(true)
 
         // Call AI analysis API
         try {
@@ -183,8 +216,8 @@ export default function Home() {
 
                   {/* Disposal Instructions */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 mb-2">What to do:</h4>
-                    <p className="text-gray-800 whitespace-pre-wrap">{scanResult.instructions}</p>
+                    <h4 className="font-semibold text-blue-900 mb-3">What to do:</h4>
+                    {formatInstructions(scanResult.instructions)}
                   </div>
                 </div>
               )}
