@@ -3,13 +3,11 @@ import { analyzeImageWithOpenAI } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('No API key configured. Please set OPENAI_API_KEY')
-      return NextResponse.json(
-        { error: 'API key not configured. Please contact administrator.' },
-        { status: 503 }
-      )
+    // Demo mode when no API key is configured
+    const DEMO_MODE = !process.env.OPENAI_API_KEY;
+
+    if (DEMO_MODE) {
+      console.log('Running in DEMO mode - no OpenAI API key configured')
     }
 
     const { image } = await request.json()
@@ -21,7 +19,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const analysis = await analyzeImageWithOpenAI(image)
+    let analysis: string;
+
+    if (DEMO_MODE) {
+      // Demo response for testing
+      analysis = `This appears to be organic waste (food item).
+
+**DEMO MODE RESPONSE**
+
+Organic waste like food items are NOT recyclable through traditional recycling programs.
+
+**Disposal Options:**
+1. **Composting (Best)**: If you have home composting or community composting access
+2. **Regular Trash**: Place in regular household trash
+
+**Note**: Food waste contaminates recyclable materials. Never put food in recycling bins.
+
+For Terre Haute: Check with Vigo County Solid Waste Management (3150 S 3rd St) about composting programs.`;
+    } else {
+      analysis = await analyzeImageWithOpenAI(image)
+    }
 
     // Parse the analysis to extract item and instructions
     // The AI response will be a natural language description
@@ -32,7 +49,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       item: item,
       instructions: analysis,
-      fullAnalysis: analysis
+      fullAnalysis: analysis,
+      demoMode: DEMO_MODE
     })
   } catch (error) {
     console.error('Error analyzing image:', error)
