@@ -178,7 +178,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): {
   let result = {
     item_name: labels[0]?.name || 'Unknown Item',
     is_recyclable: false,
-    bin_color: 'Black',
+    bin_color: 'Black' as 'Blue' | 'Black' | 'Green' | 'Special',
     disposal_method: 'Place in regular trash bin',
     preparation: 'No special preparation needed',
     confidence: 0.5
@@ -189,7 +189,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): {
     result = {
       item_name: 'Plastic Bottle',
       is_recyclable: true,
-      bin_color: 'Blue',
+      bin_color: 'Blue' as 'Blue' | 'Black' | 'Green' | 'Special',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Rinse clean, remove cap, and crush if possible',
       confidence: 0.8
@@ -198,7 +198,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): {
     result = {
       item_name: 'Paper/Cardboard',
       is_recyclable: true,
-      bin_color: 'Blue',
+      bin_color: 'Blue' as 'Blue' | 'Black' | 'Green' | 'Special',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Keep dry, flatten boxes, remove tape and staples',
       confidence: 0.8
@@ -207,7 +207,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): {
     result = {
       item_name: 'Glass Container',
       is_recyclable: true,
-      bin_color: 'Blue',
+      bin_color: 'Blue' as 'Blue' | 'Black' | 'Green' | 'Special',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Rinse clean, remove lids',
       confidence: 0.8
@@ -216,7 +216,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): {
     result = {
       item_name: 'Metal Can',
       is_recyclable: true,
-      bin_color: 'Blue',
+      bin_color: 'Blue' as 'Blue' | 'Black' | 'Green' | 'Special',
       disposal_method: 'Place in blue recycling bin',
       preparation: 'Rinse clean, labels can stay on',
       confidence: 0.8
@@ -225,7 +225,7 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): {
     result = {
       item_name: 'Food Waste',
       is_recyclable: false,
-      bin_color: 'Green',
+      bin_color: 'Green' as 'Blue' | 'Black' | 'Green' | 'Special',
       disposal_method: 'Compost if available, otherwise regular trash',
       preparation: 'Remove any packaging',
       confidence: 0.7
@@ -234,11 +234,9 @@ function interpretWithRules(labels: Array<{ name: string; value: number }>): {
     result = {
       item_name: 'Electronic Waste',
       is_recyclable: false,
-      bin_color: 'Special',
+      bin_color: 'Special' as 'Blue' | 'Black' | 'Green' | 'Special',
       disposal_method: 'Take to e-waste recycling center',
-      preparation: 'Remove batteries if possible',
-      special_instructions: 'Do not put in regular trash',
-      disposal_location: 'Terre Haute Recycling Center',
+      preparation: 'Remove batteries if possible. Do not put in regular trash. Take to Terre Haute Recycling Center',
       confidence: 0.7
     };
   }

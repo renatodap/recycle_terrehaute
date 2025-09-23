@@ -7,7 +7,7 @@ import { interpretWithRules } from '@/lib/ai-interpreter';
 import { analyzeImageWithOpenRouter, interpretWithOpenRouter, isOpenRouterConfigured } from '@/lib/openrouter-service';
 
 // Main identify endpoint - Google Vision API primary, Clarifai fallback
-export async function POST() {
+export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
