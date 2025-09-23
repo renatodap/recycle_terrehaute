@@ -116,7 +116,7 @@ export default function Home() {
     <div className="flex flex-col h-screen">
       {/* Header */}
       <header className="bg-white border-b-2 border-gray-300 p-3">
-        <h1 className="text-lg font-bold flex items-center gap-2">
+        <h1 className="text-lg font-bold flex items-center gap-2 text-black">
           <Recycle className="text-green-600" size={20} />
           Recycle Terre Haute
         </h1>
@@ -168,7 +168,7 @@ export default function Home() {
           // After Scan State
           <div className="flex-1 flex flex-col">
             <div className="border-2 border-gray-300 rounded-lg p-3 bg-white mb-3">
-              <h2 className="text-base font-bold mb-2">Scanned Item</h2>
+              <h2 className="text-base font-bold mb-2 text-black">Scanned Item</h2>
               {selectedImage && (
                 <div className="relative h-32 mb-3">
                   <Image
