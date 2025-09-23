@@ -72,8 +72,14 @@ Provide a SHORT response with:
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('OpenRouter API error:', error)
-    throw new Error('Failed to analyze image')
+    console.error('OpenRouter API error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: error,
+      apiKey: OPENROUTER_API_KEY ? 'Present' : 'Missing',
+      siteUrl: siteUrl
+    })
+    throw new Error(`Failed to analyze image: ${response.status} ${response.statusText}`)
   }
 
   const data = await response.json()
@@ -128,8 +134,14 @@ KEY RULES:
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('OpenRouter API error:', error)
-    throw new Error('Failed to get response')
+    console.error('OpenRouter Chat API error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: error,
+      apiKey: OPENROUTER_API_KEY ? 'Present' : 'Missing',
+      siteUrl: siteUrl
+    })
+    throw new Error(`Failed to get response: ${response.status} ${response.statusText}`)
   }
 
   const data = await response.json()

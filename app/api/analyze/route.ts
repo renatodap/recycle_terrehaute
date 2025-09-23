@@ -36,8 +36,13 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error analyzing image:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to analyze image' },
+      {
+        error: 'Failed to analyze image',
+        details: errorMessage,
+        hint: 'Check server logs for more information'
+      },
       { status: 500 }
     )
   }
