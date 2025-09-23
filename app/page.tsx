@@ -1,11 +1,11 @@
 'use client'
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { Camera, Recycle } from 'lucide-react'
 import Image from 'next/image'
 
 function formatInstructions(text: string) {
   const lines = text.split('\n')
-  const formatted: JSX.Element[] = []
+  const formatted: React.ReactElement[] = []
 
   lines.forEach((line, idx) => {
     const trimmed = line.trim()

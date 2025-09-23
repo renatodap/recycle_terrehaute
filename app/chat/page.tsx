@@ -1,5 +1,5 @@
 'use client'
-import { useState, FormEvent } from 'react'
+import React, { useState, FormEvent } from 'react'
 import { Send, MessageCircle, Recycle, X } from 'lucide-react'
 
 interface Message {
@@ -11,7 +11,7 @@ interface Message {
 
 function formatMessage(text: string) {
   const lines = text.split('\n')
-  const formatted: JSX.Element[] = []
+  const formatted: React.ReactElement[] = []
 
   lines.forEach((line, idx) => {
     const trimmed = line.trim()
