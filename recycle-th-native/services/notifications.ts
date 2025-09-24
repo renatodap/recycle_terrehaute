@@ -10,6 +10,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -58,11 +60,12 @@ export class NotificationService {
         categoryIdentifier: 'collection',
       },
       trigger: {
+        type: 'weekly' as const,
         weekday: dayOfWeek,
         hour: 19,
         minute: 0,
         repeats: true,
-      },
+      } as any,
     });
   }
 
@@ -82,7 +85,7 @@ export class NotificationService {
         data: { type: 'special_event', event },
         categoryIdentifier: 'event',
       },
-      trigger,
+      trigger: { date: trigger } as any,
     });
   }
 
@@ -97,7 +100,7 @@ export class NotificationService {
         body: `${achievement.title}: ${achievement.description}`,
         data: { type: 'achievement', achievement },
         categoryIdentifier: 'achievement',
-        badge: achievement.badge,
+        badge: achievement.badge ? parseInt(achievement.badge, 10) : undefined,
       },
       trigger: null, // Send immediately
     });
@@ -158,9 +161,7 @@ export class NotificationService {
     };
   }
 
-  static async configureCate
-
-(): Promise<void> {
+  static async configureCategories(): Promise<void> {
     if (Platform.OS === 'ios') {
       await Notifications.setNotificationCategoryAsync('collection', [
         {

@@ -72,7 +72,6 @@ export function BarcodeScannerScreen({ navigation }: ScannerScreenProps<'Barcode
       <BarCodeScanner
         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
         style={StyleSheet.absoluteFillObject}
-        torchMode={torchOn ? 'on' : 'off'}
       />
 
       <View style={styles.overlay}>

@@ -27,7 +27,6 @@ export function ScanResultScreen({ route, navigation }: ScannerScreenProps<'Scan
   const handleFindLocations = () => {
     navigation.navigate('Locations', {
       screen: 'LocationsList',
-      params: { materials: analysis.materials },
     });
   };
 
@@ -54,7 +53,7 @@ export function ScanResultScreen({ route, navigation }: ScannerScreenProps<'Scan
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Materials</Text>
             <View style={styles.materialsContainer}>
-              {analysis.materials.map((material, index) => (
+              {analysis.materials.map((material: string, index: number) => (
                 <View key={index} style={styles.materialChip}>
                   <Text style={styles.materialText}>{material}</Text>
                 </View>

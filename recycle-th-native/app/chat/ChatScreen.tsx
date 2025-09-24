@@ -155,12 +155,11 @@ export function ChatScreen() {
 
       <View style={styles.inputContainer}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, { maxHeight: 100 }]}
           value={inputText}
           onChangeText={setInputText}
           placeholder="Type your message..."
           multiline
-          maxHeight={100}
           onSubmitEditing={() => sendMessage(inputText)}
         />
         <TouchableOpacity
@@ -284,7 +283,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
-    maxHeight: 100,
     marginRight: 8,
   },
   sendButton: {

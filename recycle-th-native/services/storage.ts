@@ -10,7 +10,7 @@ export interface ScanHistoryItem {
   barcode?: string;
   analysis: {
     item: string;
-    recyclable: string;
+    recyclable: 'Yes' | 'No' | 'Special';
     instructions: string;
     confidence?: number;
     materials?: string[];

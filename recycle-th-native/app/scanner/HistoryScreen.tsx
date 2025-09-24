@@ -18,8 +18,10 @@ interface ScanHistoryItem {
   barcode?: string;
   analysis: {
     item: string;
-    recyclable: string;
+    recyclable: 'Yes' | 'No' | 'Special';
     instructions: string;
+    confidence?: number;
+    materials?: string[];
   };
   timestamp: string;
 }
@@ -67,7 +69,10 @@ export function HistoryScreen({ navigation }: ScannerScreenProps<'History'>) {
       onPress={() => {
         navigation.navigate('ScanResult', {
           imageUri: item.imageUri || '',
-          analysis: item.analysis,
+          analysis: {
+            ...item.analysis,
+            confidence: item.analysis.confidence || 0.8,
+          },
         });
       }}
     >
