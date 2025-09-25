@@ -14,5 +14,8 @@
       "@/assets/*": ["./assets/*"],
       "@/data/*": ["./data/*"]
     }
-  }
+  },
+  "exclude": [
+    "supabase/functions/**/*"
+  ]
 }

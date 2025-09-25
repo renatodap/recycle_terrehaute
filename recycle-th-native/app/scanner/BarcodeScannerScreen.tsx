@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { ScannerScreenProps } from '../../types/navigation';
 import { analyzeBarcode } from '../../services/api';
 import { saveScanToHistory } from '../../services/storage';
 
 export function BarcodeScannerScreen({ navigation }: ScannerScreenProps<'BarcodeScanner'>) {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     setScanned(true);
@@ -45,7 +38,7 @@ export function BarcodeScannerScreen({ navigation }: ScannerScreenProps<'Barcode
     }
   };
 
-  if (hasPermission === null) {
+  if (!permission) {
     return (
       <View style={styles.container}>
         <Text>Requesting camera permission...</Text>
@@ -53,12 +46,18 @@ export function BarcodeScannerScreen({ navigation }: ScannerScreenProps<'Barcode
     );
   }
 
-  if (hasPermission === false) {
+  if (!permission.granted) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>No access to camera</Text>
         <TouchableOpacity
           style={styles.button}
+          onPress={requestPermission}
+        >
+          <Text style={styles.buttonText}>Grant Permission</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 10 }]}
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.buttonText}>Go Back</Text>
@@ -69,9 +68,14 @@ export function BarcodeScannerScreen({ navigation }: ScannerScreenProps<'Barcode
 
   return (
     <View style={styles.container}>
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+      <CameraView
         style={StyleSheet.absoluteFillObject}
+        facing="back"
+        enableTorch={torchOn}
+        barcodeScannerSettings={{
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'code93', 'codabar', 'itf14', 'qr', 'pdf417', 'aztec', 'datamatrix'],
+        }}
+        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       />
 
       <View style={styles.overlay}>
