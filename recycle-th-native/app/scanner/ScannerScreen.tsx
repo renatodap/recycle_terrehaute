@@ -16,10 +16,12 @@ import { ScannerScreenProps } from '../../types/navigation';
 import { analyzeImage } from '../../services/api';
 import { saveScanToHistory } from '../../services/storage';
 import { useSubscription } from '../../hooks/useSubscription';
+import { getErrorMessage, networkManager } from '../../utils/network';
 
 export function ScannerScreen({ navigation }: ScannerScreenProps<'ScannerHome'>) {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState<string>('');
   const { canScan, incrementScanCount, remainingScans } = useSubscription();
 
   const handleCameraPress = async () => {
@@ -45,7 +47,7 @@ export function ScannerScreen({ navigation }: ScannerScreenProps<'ScannerHome'>)
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.7, // Reduced quality for faster uploads
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -77,7 +79,7 @@ export function ScannerScreen({ navigation }: ScannerScreenProps<'ScannerHome'>)
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.7, // Reduced quality for faster uploads
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -87,11 +89,55 @@ export function ScannerScreen({ navigation }: ScannerScreenProps<'ScannerHome'>)
   };
 
   const analyzeImageAndNavigate = async (uri: string) => {
+    // Check network connectivity first
+    if (!networkManager.isOnline()) {
+      Alert.alert(
+        'No Internet Connection',
+        'Please check your network connection and try again.',
+        [
+          { text: 'OK' },
+          {
+            text: 'Retry',
+            onPress: () => analyzeImageAndNavigate(uri)
+          }
+        ]
+      );
+      return;
+    }
+
     setIsAnalyzing(true);
-    AccessibilityInfo.announceForAccessibility('Analyzing image...');
+    setAnalysisStep('Compressing image for optimal upload speed...');
+    AccessibilityInfo.announceForAccessibility('Compressing and analyzing image...');
+
+    // Small delay to show compression step
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setAnalysisStep('Analyzing recyclability...');
 
     try {
       const analysis = await analyzeImage(uri);
+
+      // Check if analysis actually succeeded
+      if (analysis.confidence === 0.0 && analysis.item === 'Unable to identify') {
+        const errorMessage = analysis.instructions || 'Unable to analyze image';
+        Alert.alert(
+          'Analysis Issue',
+          errorMessage,
+          [
+            { text: 'OK' },
+            {
+              text: 'Try Again',
+              onPress: () => analyzeImageAndNavigate(uri)
+            },
+            {
+              text: 'Contact Support',
+              onPress: () => Alert.alert('Support', 'Call Vigo County Solid Waste at (812) 462-3363')
+            }
+          ]
+        );
+        setIsAnalyzing(false);
+        return;
+      }
+
       await saveScanToHistory({
         imageUri: uri,
         analysis,
@@ -103,10 +149,23 @@ export function ScannerScreen({ navigation }: ScannerScreenProps<'ScannerHome'>)
         imageUri: uri,
         analysis,
       });
-    } catch (error) {
-      Alert.alert('Analysis Failed', 'Could not analyze the image. Please try again.');
+    } catch (error: any) {
+      const errorMessage = getErrorMessage(error);
+
+      Alert.alert(
+        'Analysis Failed',
+        errorMessage,
+        [
+          { text: 'OK' },
+          {
+            text: 'Try Again',
+            onPress: () => analyzeImageAndNavigate(uri)
+          }
+        ]
+      );
     } finally {
       setIsAnalyzing(false);
+      setAnalysisStep('');
     }
   };
 
@@ -140,7 +199,9 @@ export function ScannerScreen({ navigation }: ScannerScreenProps<'ScannerHome'>)
           {isAnalyzing && (
             <View style={styles.analyzingOverlay}>
               <ActivityIndicator size="large" color="#fff" />
-              <Text style={styles.analyzingText}>Analyzing...</Text>
+              <Text style={styles.analyzingText}>
+                {analysisStep || 'Processing...'}
+              </Text>
             </View>
           )}
         </View>
@@ -199,6 +260,7 @@ export function ScannerScreen({ navigation }: ScannerScreenProps<'ScannerHome'>)
         <Text style={styles.tip}>• Center the item in frame</Text>
         <Text style={styles.tip}>• Show labels if present</Text>
         <Text style={styles.tip}>• Avoid blurry photos</Text>
+        <Text style={styles.tip}>• Images are compressed for fast upload</Text>
       </View>
     </ScrollView>
   );

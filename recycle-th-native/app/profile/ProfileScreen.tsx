@@ -1,9 +1,53 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ProfileScreenProps } from '../../types/navigation';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserStats } from '../../services/supabaseDb';
+import { useNavigation } from '@react-navigation/native';
 
 export function ProfileScreen({ navigation }: ProfileScreenProps<'ProfileHome'>) {
+  const { user, profile, isGuest, signOut } = useAuth();
+  const rootNav = useNavigation<any>();
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    if (user) {
+      loadStats();
+    }
+  }, [user]);
+
+  const loadStats = async () => {
+    if (user?.id) {
+      const userStats = await getUserStats(user.id);
+      setStats(userStats);
+    }
+  };
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSignIn = () => {
+    rootNav.reset({
+      index: 0,
+      routes: [{ name: 'Welcome' }],
+    });
+  };
+
   const menuItems = [
     { title: 'Subscription', icon: 'diamond-outline', screen: 'Subscription' },
     { title: 'Achievements', icon: 'trophy-outline', screen: 'Achievements' },
@@ -19,23 +63,36 @@ export function ProfileScreen({ navigation }: ProfileScreenProps<'ProfileHome'>)
         <View style={styles.avatar}>
           <Ionicons name="person" size={48} color="#059669" />
         </View>
-        <Text style={styles.userName}>Recycling Champion</Text>
-        <Text style={styles.userEmail}>user@example.com</Text>
+        <Text style={styles.userName}>
+          {isGuest ? 'Guest User' : (profile?.name || 'Recycling Champion')}
+        </Text>
+        <Text style={styles.userEmail}>
+          {isGuest ? 'Not signed in' : (user?.email || 'user@example.com')}
+        </Text>
+
+        {isGuest && (
+          <TouchableOpacity
+            style={styles.signInButton}
+            onPress={handleSignIn}
+          >
+            <Text style={styles.signInButtonText}>Sign In for Full Features</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>42</Text>
+          <Text style={styles.statValue}>{stats?.total_scans || 0}</Text>
           <Text style={styles.statLabel}>Items Scanned</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>28</Text>
+          <Text style={styles.statValue}>{stats?.items_recycled || 0}</Text>
           <Text style={styles.statLabel}>Recycled</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>15</Text>
+          <Text style={styles.statValue}>{stats?.streak_days || 0}</Text>
           <Text style={styles.statLabel}>Streak Days</Text>
         </View>
       </View>
@@ -52,6 +109,16 @@ export function ProfileScreen({ navigation }: ProfileScreenProps<'ProfileHome'>)
             <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
           </TouchableOpacity>
         ))}
+
+        {!isGuest && (
+          <TouchableOpacity
+            style={[styles.menuItem, styles.signOutItem]}
+            onPress={handleSignOut}
+          >
+            <Ionicons name="log-out-outline" size={24} color="#ef4444" />
+            <Text style={[styles.menuItemText, styles.signOutText]}>Sign Out</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );
@@ -130,5 +197,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
     marginLeft: 16,
+  },
+  signInButton: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#059669',
+    borderRadius: 8,
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  signOutItem: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingTop: 20,
+  },
+  signOutText: {
+    color: '#ef4444',
   },
 });

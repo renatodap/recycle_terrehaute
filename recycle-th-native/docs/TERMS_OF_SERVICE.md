@@ -1,14 +1,14 @@
-# Terms of Service for Recycle Terre Haute
+# Terms of Service for SnapCycle
 
 **Effective Date: September 2025**
 
 ## 1. Acceptance of Terms
 
-By downloading, installing, or using Recycle Terre Haute ("the App"), you agree to these Terms of Service ("Terms"). If you do not agree, do not use the App.
+By downloading, installing, or using SnapCycle ("the App"), you agree to these Terms of Service ("Terms"). If you do not agree, do not use the App.
 
 ## 2. Description of Service
 
-Recycle Terre Haute provides:
+SnapCycle provides:
 - AI-powered recycling identification through image analysis
 - Location-based recycling center information
 - Recycling schedules and reminders
@@ -59,7 +59,7 @@ While we strive for accuracy:
 
 ## 7. Intellectual Property
 
-- The App and its content are owned by Recycle Terre Haute
+- The App and its content are owned by SnapCycle
 - User-generated content remains yours but you grant us license to use
 - Recycling data is compiled from public sources
 
@@ -136,7 +136,7 @@ If any provision is unenforceable, the remaining Terms continue in effect.
 
 ## 20. Entire Agreement
 
-These Terms constitute the entire agreement between you and Recycle Terre Haute.
+These Terms constitute the entire agreement between you and SnapCycle.
 
 ## 21. Contact Information
 
@@ -152,4 +152,4 @@ For questions about these Terms:
 - All claims should be directed to us, not Apple
 - Apple is a third-party beneficiary with right to enforce Terms
 
-By using Recycle Terre Haute, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+By using SnapCycle, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.

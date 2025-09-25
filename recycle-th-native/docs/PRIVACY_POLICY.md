@@ -1,10 +1,10 @@
-# Privacy Policy for Recycle Terre Haute
+# Privacy Policy for SnapCycle
 
 **Last Updated: September 2025**
 
 ## Introduction
 
-Recycle Terre Haute ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.
+SnapCycle ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.
 
 ## Information We Collect
 

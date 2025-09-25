@@ -13,8 +13,6 @@ import { HistoryScreen } from '../../app/scanner/HistoryScreen';
 
 import { LocationsScreen } from '../../app/locations/LocationsScreen';
 import { LocationDetailScreen } from '../../app/locations/LocationDetailScreen';
-import { MapScreen } from '../../app/locations/MapScreen';
-import { DirectionsScreen } from '../../app/locations/DirectionsScreen';
 
 import { ChatScreen } from '../../app/chat/ChatScreen';
 
@@ -90,16 +88,6 @@ function LocationsStackNavigator() {
         name="LocationDetail"
         component={LocationDetailScreen}
         options={{ title: 'Location Details' }}
-      />
-      <LocationsStack.Screen
-        name="Map"
-        component={MapScreen}
-        options={{ title: 'Map View' }}
-      />
-      <LocationsStack.Screen
-        name="Directions"
-        component={DirectionsScreen}
-        options={{ title: 'Directions' }}
       />
     </LocationsStack.Navigator>
   );
@@ -182,9 +170,21 @@ export function TabNavigator() {
           backgroundColor: 'white',
           borderTopWidth: 1,
           borderTopColor: '#e5e5e5',
-          paddingBottom: Platform.OS === 'ios' ? 20 : 5,
-          paddingTop: 5,
-          height: Platform.OS === 'ios' ? 85 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 90 : 70,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: -2,
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
         },
         tabBarLabelStyle: {
           fontSize: 12,

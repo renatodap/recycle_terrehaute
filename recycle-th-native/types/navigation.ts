@@ -24,10 +24,6 @@ export type LocationsStackParamList = {
   LocationDetail: {
     locationId: string;
   };
-  Map: undefined;
-  Directions: {
-    locationId: string;
-  };
 };
 
 export type ProfileStackParamList = {

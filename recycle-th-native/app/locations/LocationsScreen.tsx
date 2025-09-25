@@ -7,20 +7,29 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  Linking,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LocationsScreenProps } from '../../types/navigation';
-import { getLocations } from '../../services/api';
+import { getRecyclingLocations, getNearbyLocations } from '../../services/supabaseDb';
 import * as Location from 'expo-location';
 
 interface RecycleLocation {
   id: string;
   name: string;
   address: string;
+  city: string;
+  state: string;
+  zip: string;
   distance?: number;
-  accepts: string[];
-  hours: string;
-  phone: string;
+  materials_accepted: string[];
+  hours?: string;
+  phone?: string;
+  latitude: number;
+  longitude: number;
+  is_drop_off: boolean;
+  is_curbside: boolean;
 }
 
 export function LocationsScreen({ navigation, route }: LocationsScreenProps<'LocationsList'>) {
@@ -31,9 +40,12 @@ export function LocationsScreen({ navigation, route }: LocationsScreenProps<'Loc
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
 
   useEffect(() => {
-    loadLocations();
     getUserLocation();
   }, []);
+
+  useEffect(() => {
+    loadLocations();
+  }, [userLocation]);
 
   useEffect(() => {
     filterLocations();
@@ -49,14 +61,73 @@ export function LocationsScreen({ navigation, route }: LocationsScreenProps<'Loc
 
   const loadLocations = async () => {
     try {
-      const data = await getLocations();
-      setLocations(data);
-      setFilteredLocations(data);
+      // Try to get nearby locations if we have user location
+      let data;
+      if (userLocation) {
+        data = await getNearbyLocations(
+          userLocation.coords.latitude,
+          userLocation.coords.longitude,
+          25 // 25 miles radius
+        );
+      } else {
+        // Fallback to Terre Haute locations
+        data = await getRecyclingLocations('Terre Haute', 'IN');
+      }
+
+      // Calculate distances if we have user location
+      if (userLocation && data) {
+        const locationsWithDistance = data.map((loc: any) => ({
+          ...loc,
+          distance: calculateDistance(
+            userLocation.coords.latitude,
+            userLocation.coords.longitude,
+            loc.latitude,
+            loc.longitude
+          )
+        }));
+        setLocations(locationsWithDistance);
+        setFilteredLocations(locationsWithDistance);
+      } else {
+        setLocations(data || []);
+        setFilteredLocations(data || []);
+      }
     } catch (error) {
       console.error('Error loading locations:', error);
+      // Fallback to empty array
+      setLocations([]);
+      setFilteredLocations([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 3959; // Radius of the Earth in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const openMapsApp = (location: RecycleLocation) => {
+    const address = encodeURIComponent(
+      `${location.address}, ${location.city}, ${location.state} ${location.zip}`
+    );
+
+    const url = Platform.select({
+      ios: `maps:0,0?q=${address}`,
+      android: `geo:0,0?q=${address}`,
+      default: `https://maps.google.com/maps?q=${address}`,
+    });
+
+    Linking.openURL(url).catch((err) => {
+      // Fallback to Google Maps web if native maps fail
+      Linking.openURL(`https://maps.google.com/maps?q=${address}`);
+    });
   };
 
   const filterLocations = () => {
@@ -68,9 +139,10 @@ export function LocationsScreen({ navigation, route }: LocationsScreenProps<'Loc
     const filtered = locations.filter(
       (location) =>
         location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        location.accepts.some((material) =>
+        location.materials_accepted?.some((material) =>
           material.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        ) ||
+        location.city?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredLocations(filtered);
   };
@@ -92,7 +164,7 @@ export function LocationsScreen({ navigation, route }: LocationsScreenProps<'Loc
           <View style={styles.addressRow}>
             <Ionicons name="location-outline" size={14} color="#6b7280" />
             <Text style={styles.locationAddress} numberOfLines={2}>
-              {item.address}
+              {item.address}, {item.city}, {item.state} {item.zip}
             </Text>
           </View>
         </View>
@@ -108,20 +180,18 @@ export function LocationsScreen({ navigation, route }: LocationsScreenProps<'Loc
       <View style={styles.materialsContainer}>
         <Text style={styles.materialsLabel}>Accepts:</Text>
         <Text style={styles.materialsList} numberOfLines={2}>
-          {item.accepts.join(', ')}
+          {item.materials_accepted?.join(', ') || 'Various recyclables'}
         </Text>
       </View>
 
       <View style={styles.locationFooter}>
         <View style={styles.hoursContainer}>
           <Ionicons name="time-outline" size={14} color="#6b7280" />
-          <Text style={styles.hoursText}>{item.hours}</Text>
+          <Text style={styles.hoursText}>{item.hours || 'Hours vary'}</Text>
         </View>
         <TouchableOpacity
           style={styles.directionsButton}
-          onPress={() =>
-            navigation.navigate('Directions', { locationId: item.id })
-          }
+          onPress={() => openMapsApp(item)}
         >
           <Ionicons name="navigate" size={16} color="#059669" />
           <Text style={styles.directionsText}>Directions</Text>
@@ -162,13 +232,6 @@ export function LocationsScreen({ navigation, route }: LocationsScreenProps<'Loc
         )}
       </View>
 
-      <TouchableOpacity
-        style={styles.mapButton}
-        onPress={() => navigation.navigate('Map')}
-      >
-        <Ionicons name="map" size={20} color="#fff" />
-        <Text style={styles.mapButtonText}>View Map</Text>
-      </TouchableOpacity>
 
       {filteredLocations.length > 0 ? (
         <FlatList

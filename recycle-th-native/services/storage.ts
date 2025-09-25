@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from './supabase';
+import { saveScan as saveToSupabase, getUserScanHistory } from './supabaseDb';
 
 const SCAN_HISTORY_KEY = '@scan_history';
 const SUBSCRIPTION_KEY = '@subscription';
@@ -20,6 +22,33 @@ export interface ScanHistoryItem {
 
 export async function saveScanToHistory(scan: Omit<ScanHistoryItem, 'id'>) {
   try {
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // Save to Supabase for authenticated users
+      const { data, error } = await saveToSupabase({
+        user_id: user.id,
+        item_name: scan.analysis.item,
+        recyclable: scan.analysis.recyclable,
+        instructions: scan.analysis.instructions,
+        materials: scan.analysis.materials,
+        confidence: scan.analysis.confidence || 0.8,
+        barcode: scan.barcode,
+      });
+
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+        // Fall back to local storage
+      } else if (data) {
+        return {
+          ...scan,
+          id: data.id,
+        };
+      }
+    }
+
+    // Save locally for guest users or as fallback
     const history = await getScanHistory();
     const newScan: ScanHistoryItem = {
       ...scan,
@@ -37,6 +66,31 @@ export async function saveScanToHistory(scan: Omit<ScanHistoryItem, 'id'>) {
 
 export async function getScanHistory(): Promise<ScanHistoryItem[]> {
   try {
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // Get from Supabase for authenticated users
+      const supabaseHistory = await getUserScanHistory(user.id);
+
+      if (supabaseHistory && supabaseHistory.length > 0) {
+        return supabaseHistory.map(item => ({
+          id: item.id,
+          imageUri: item.image_url,
+          barcode: item.barcode,
+          analysis: {
+            item: item.item_name,
+            recyclable: item.recyclable,
+            instructions: item.instructions,
+            confidence: item.confidence,
+            materials: item.materials,
+          },
+          timestamp: item.created_at,
+        }));
+      }
+    }
+
+    // Get from local storage for guest users
     const historyJson = await AsyncStorage.getItem(SCAN_HISTORY_KEY);
     return historyJson ? JSON.parse(historyJson) : [];
   } catch (error) {
@@ -96,9 +150,10 @@ export async function updateSubscription(data: Partial<SubscriptionData>) {
 export interface Settings {
   notifications: boolean;
   locationTracking: boolean;
-  darkMode: boolean;
   reminderTime?: string;
   zone?: string;
+  imageQuality?: 'low' | 'medium' | 'high';
+  dataSaver?: boolean;
 }
 
 export async function getSettings(): Promise<Settings> {
@@ -110,14 +165,16 @@ export async function getSettings(): Promise<Settings> {
     return {
       notifications: true,
       locationTracking: true,
-      darkMode: false,
+      imageQuality: 'medium',
+      dataSaver: false,
     };
   } catch (error) {
     console.error('Error getting settings:', error);
     return {
       notifications: true,
       locationTracking: true,
-      darkMode: false,
+      imageQuality: 'medium',
+      dataSaver: false,
     };
   }
 }
