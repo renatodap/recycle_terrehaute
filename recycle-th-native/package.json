@@ -63,7 +63,15 @@
   "private": true,
   "expo": {
     "install": {
-      "exclude": ["react", "react-dom", "react-native-worklets", "jest"]
+      "exclude": [
+        "react",
+        "react-dom",
+        "react-native-worklets",
+        "jest"
+      ]
     }
+  },
+  "overrides": {
+    "expo-image-loader": "6.0.0"
   }
 }
