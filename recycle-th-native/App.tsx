@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Import simple screens that don't have crash-causing dependencies
 import { SimpleScannerScreen } from './app/scanner/SimpleScannerScreen';
-import { LocationsScreen } from './app/locations/LocationsScreen';
+import { SimpleLocationsScreen } from './app/locations/SimpleLocationsScreen';
 import { SimpleChatScreen } from './app/chat/SimpleChatScreen';
 import { SimpleProfileScreen } from './app/profile/SimpleProfileScreen';
 
@@ -46,7 +46,7 @@ export default function App() {
           })}
         >
           <Tab.Screen name="Scanner" component={SimpleScannerScreen} />
-          <Tab.Screen name="Locations" component={LocationsScreen} />
+          <Tab.Screen name="Locations" component={SimpleLocationsScreen} />
           <Tab.Screen name="Chat" component={SimpleChatScreen} />
           <Tab.Screen name="Profile" component={SimpleProfileScreen} />
         </Tab.Navigator>
