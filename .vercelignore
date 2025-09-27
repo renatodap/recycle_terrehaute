@@ -1,0 +1,10 @@
+# Ignore React Native app folder during Vercel deployment
+recycle-th-native/
+
+# Ignore other unnecessary files for web deployment
+*.log
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
