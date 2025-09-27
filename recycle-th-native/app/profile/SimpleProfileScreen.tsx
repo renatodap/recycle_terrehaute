@@ -6,12 +6,18 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export function SimpleProfileScreen() {
   const handleMenuPress = (item: string) => {
-    Alert.alert(item, `${item} feature coming soon!`);
+    if (Platform.OS === 'web') {
+      console.log(`${item} pressed - feature coming soon!`);
+      window.alert(`${item} feature coming soon!`);
+    } else {
+      Alert.alert(item, `${item} feature coming soon!`);
+    }
   };
 
   return (
