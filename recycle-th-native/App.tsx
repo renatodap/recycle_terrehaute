@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SimpleScannerScreen } from './app/scanner/SimpleScannerScreen';
 import { LocationsScreen } from './app/locations/LocationsScreen';
 import { SimpleChatScreen } from './app/chat/SimpleChatScreen';
-import { ProfileScreen } from './app/profile/ProfileScreen';
+import { SimpleProfileScreen } from './app/profile/SimpleProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -48,7 +48,7 @@ export default function App() {
           <Tab.Screen name="Scanner" component={SimpleScannerScreen} />
           <Tab.Screen name="Locations" component={LocationsScreen} />
           <Tab.Screen name="Chat" component={SimpleChatScreen} />
-          <Tab.Screen name="Profile" component={ProfileScreen} />
+          <Tab.Screen name="Profile" component={SimpleProfileScreen} />
         </Tab.Navigator>
       </NavigationContainer>
       <StatusBar style="light" backgroundColor="#059669" />
