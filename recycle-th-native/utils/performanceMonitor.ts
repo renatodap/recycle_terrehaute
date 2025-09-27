@@ -114,4 +114,46 @@ export class PerformanceMonitor {
   }
 }
 
-export const performanceMonitor = PerformanceMonitor.getInstance();
+// Lazy initialization to prevent crash on app start
+let _performanceMonitor: PerformanceMonitor | null = null;
+
+export const performanceMonitor = {
+  startUploadTimer(): void {
+    if (!_performanceMonitor) {
+      _performanceMonitor = PerformanceMonitor.getInstance();
+    }
+    _performanceMonitor.startUploadTimer();
+  },
+
+  async recordCompressionMetrics(
+    originalSize: number,
+    compressedSize: number,
+    compressionRatio: number
+  ): Promise<void> {
+    if (!_performanceMonitor) {
+      _performanceMonitor = PerformanceMonitor.getInstance();
+    }
+    return _performanceMonitor.recordCompressionMetrics(originalSize, compressedSize, compressionRatio);
+  },
+
+  async getMetrics(): Promise<any> {
+    if (!_performanceMonitor) {
+      _performanceMonitor = PerformanceMonitor.getInstance();
+    }
+    return _performanceMonitor.getMetrics();
+  },
+
+  async getPerformanceSummary(): Promise<string> {
+    if (!_performanceMonitor) {
+      _performanceMonitor = PerformanceMonitor.getInstance();
+    }
+    return _performanceMonitor.getPerformanceSummary();
+  },
+
+  async resetMetrics(): Promise<void> {
+    if (!_performanceMonitor) {
+      _performanceMonitor = PerformanceMonitor.getInstance();
+    }
+    return _performanceMonitor.resetMetrics();
+  }
+};

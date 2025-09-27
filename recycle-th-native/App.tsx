@@ -1,53 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
+// Import simple screens that don't have crash-causing dependencies
+import { SimpleScannerScreen } from './app/scanner/SimpleScannerScreen';
+import { LocationsScreen } from './app/locations/LocationsScreen';
+import { SimpleChatScreen } from './app/chat/SimpleChatScreen';
+import { ProfileScreen } from './app/profile/ProfileScreen';
+
 const Tab = createBottomTabNavigator();
-
-// Placeholder screens - no external dependencies
-function ScannerScreen() {
-  return (
-    <View style={styles.screen}>
-      <Ionicons name="camera" size={48} color="#059669" />
-      <Text style={styles.title}>Scanner</Text>
-      <Text style={styles.subtitle}>Scan recyclable items</Text>
-    </View>
-  );
-}
-
-function LocationsScreen() {
-  return (
-    <View style={styles.screen}>
-      <Ionicons name="location" size={48} color="#059669" />
-      <Text style={styles.title}>Locations</Text>
-      <Text style={styles.subtitle}>Find recycling centers</Text>
-    </View>
-  );
-}
-
-function ChatScreen() {
-  return (
-    <View style={styles.screen}>
-      <Ionicons name="chatbubbles" size={48} color="#059669" />
-      <Text style={styles.title}>Chat</Text>
-      <Text style={styles.subtitle}>Recycling assistant</Text>
-    </View>
-  );
-}
-
-function ProfileScreen() {
-  return (
-    <View style={styles.screen}>
-      <Ionicons name="person" size={48} color="#059669" />
-      <Text style={styles.title}>Profile</Text>
-      <Text style={styles.subtitle}>Your account</Text>
-    </View>
-  );
-}
 
 export default function App() {
   return (
@@ -81,9 +45,9 @@ export default function App() {
             },
           })}
         >
-          <Tab.Screen name="Scanner" component={ScannerScreen} />
+          <Tab.Screen name="Scanner" component={SimpleScannerScreen} />
           <Tab.Screen name="Locations" component={LocationsScreen} />
-          <Tab.Screen name="Chat" component={ChatScreen} />
+          <Tab.Screen name="Chat" component={SimpleChatScreen} />
           <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
       </NavigationContainer>
@@ -91,23 +55,3 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 8,
-  },
-});

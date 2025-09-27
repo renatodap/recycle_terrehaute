@@ -74,7 +74,31 @@ class NetworkManager {
   }
 }
 
-export const networkManager = new NetworkManager();
+// Lazy initialization to prevent crash on app start
+let _networkManager: NetworkManager | null = null;
+
+export const networkManager = {
+  isOnline(): boolean {
+    if (!_networkManager) {
+      _networkManager = new NetworkManager();
+    }
+    return _networkManager.isOnline();
+  },
+
+  async checkConnection(): Promise<NetworkState> {
+    if (!_networkManager) {
+      _networkManager = new NetworkManager();
+    }
+    return _networkManager.checkConnection();
+  },
+
+  subscribe(listener: (state: NetworkState) => void): () => void {
+    if (!_networkManager) {
+      _networkManager = new NetworkManager();
+    }
+    return _networkManager.subscribe(listener);
+  }
+};
 
 // Utility function for retry logic with exponential backoff
 export async function retryWithBackoff<T>(
