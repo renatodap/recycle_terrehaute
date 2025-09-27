@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.snapcycle.app",
-      "buildNumber": "11",
+      "buildNumber": "12",
       "infoPlist": {
         "NSCameraUsageDescription": "SnapCycle needs camera access to scan items and identify if they're recyclable",
         "NSPhotoLibraryUsageDescription": "SnapCycle needs photo library access to analyze images of items for recycling guidance",
